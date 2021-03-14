@@ -29,75 +29,39 @@ func TestRingDistance(t *testing.T) {
 func TestStabilizeAddShortcut(t *testing.T) {
 	assert := assert.New(t)
 
-	nodeOne := Node{
-		Id: 5,
-	}
-
-	nodeTwo := Node{
-		Id: 17,
-	}
-
-	nodeThree := Node{
-		Id: 22,
-	}
-
-	nodeFour := Node{
-		Id: 56,
-	}
-
-	nodeFive := Node{
-		Id: 71,
-	}
-
-	nodeSix := Node{
-		Id: 89,
-	}
-
-	nodeSeven := Node{
-		Id: 92,
-	}
-
-	//nodeEight := Node{
-	//	Id: 110,
-	//}
-	//
 	const maxrange = 100
+	nodeIds := []int{5, 17, 22, 56, 71, 89, 92} // 110
+	var nodes []Node
 
-	nodeOne.Succ = &nodeTwo
-	nodeTwo.Succ = &nodeThree
-	nodeThree.Succ = &nodeFour
-	nodeFour.Succ = &nodeFive
-	nodeFive.Succ = &nodeSix
-	nodeSix.Succ = &nodeSeven
-	nodeSeven.Succ = &nodeOne
-	//nodeEight.Succ = &nodeOne
+	// create nodes
+	for i := 0; i < len(nodeIds); i++ {
+		nodes = append(nodes, Node{Id: nodeIds[i]})
+	}
 
-	// fmt.Println(nodeOne)
+	// add nodes' successors
+	for i := 0; i < len(nodeIds); i++ {
+		next_in_ring_i := (i + 1) % len(nodeIds)
+		nodes[i].Succ = &nodes[next_in_ring_i]
+	}
 
-	nodeOne.Stabilize()
-	nodeTwo.Stabilize()
-	nodeThree.Stabilize()
-	nodeFour.Stabilize()
-	nodeFive.Stabilize()
-	nodeSix.Stabilize()
-	nodeSeven.Stabilize()
+	// stabilize nodes
+	for i := 0; i < len(nodeIds); i++ {
+		nodes[i].Stabilize()
+	}
 
-	nodeOne.AddShortcut(&nodeFour)
-	nodeOne.AddShortcut(&nodeFive)
-	nodeThree.AddShortcut(&nodeSix)
+	// add some shortcuts
+	nodes[0].AddShortcut(&nodes[3])
+	nodes[0].AddShortcut(&nodes[4])
+	nodes[2].AddShortcut(&nodes[5])
 
-	nodeOne.MigrateData(maxrange)
-	nodeTwo.MigrateData(maxrange)
+	// migrate data TODO: for all nodes?
+	for i := 0; i < 2; /*len(nodeIds)*/ i++ {
+		nodes[i].MigrateData(maxrange)
+	}
 
-	/*nodeThree.MigrateData(maxrange)
-	nodeFour.MigrateData(maxrange)
-	nodeFive.MigrateData(maxrange)
-	nodeSix.MigrateData(maxrange)
-	nodeSeven.MigrateData(maxrange)
-	*/
-
-	assert.Equal(&nodeOne, nodeSeven.Succ, "failed stabilize")
-	assert.Equal(len(nodeOne.Shortcuts), 2, "failed to add shortcuts")
+	assert.Equal(nodes[len(nodes)-1].Succ, &nodes[0], "last node doesn't link to first")
+	assert.Equal(nodes[0].Succ.Succ, &nodes[2], "failed to stabilize SuccSucc")
+	assert.Equal(len(nodes[0].Shortcuts), 2, "failed to add shortcuts")
 
 	//fmt.Println(nodeTwo.ClosestHopTo(93))
 
