@@ -199,7 +199,7 @@ func (n *Node) Lookup(key int) *Node {
 	if ShouldContainValue(n.SuccSucc.Id, key, n.Succ.Id) {
 
 		// then ask her!
-		if n.Succ.HasValue(key) {
+		if n.SuccSucc.HasValue(key) {
 			return n.SuccSucc
 		} else {
 			return &emptyNode // TODO: define behavior when key not found
