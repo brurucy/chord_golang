@@ -6,11 +6,13 @@ import (
 )
 
 type Node struct {
-	Id        int
-	Succ      *Node
-	SuccSucc  *Node
-	Shortcuts []*Node
-	Values    map[int]bool
+	Id                int
+	Succ              *Node
+	SuccSucc          *Node
+	Successors        []*Node
+	Shortcuts         []*Node
+	StabilizationRate int
+	Values            map[int]bool
 }
 
 func AbsInt(x int) int {
@@ -21,6 +23,48 @@ func AbsInt(x int) int {
 
 	}
 	return x
+
+}
+
+func mod(a, b int) int {
+	m := a % b
+	if a < 0 && b < 0 {
+		m -= b
+	}
+	if a < 0 && b > 0 {
+		m += b
+	}
+	return m
+}
+
+func Min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func RingDistance(from, to, maxSize, minSize int) int {
+
+	toFrom := to - from
+	maxSizeToFrom := AbsInt((maxSize - to - from))
+
+	result := Min(toFrom, maxSizeToFrom)
+
+	if to > from {
+
+		return result
+
+	} else if from == to {
+
+		return 0
+
+	} else {
+
+		result = mod((maxSize - minSize + result), maxSize)
+		return result
+
+	}
 
 }
 
@@ -120,8 +164,12 @@ func (n *Node) ClosestHopTo(key int) *Node {
 
 func (n *Node) AddShortcut(shortcut *Node) {
 
+	// Just leave it linear, no need for bisection
+	//n.Shortcuts = append(n.Shortcuts, shortcut)
+
 	candidateIndex := sort.Search(len(n.Shortcuts), func(i int) bool { return n.Shortcuts[i].Id >= (*shortcut).Id })
 
+	// Insert, same for every insert
 	n.Shortcuts = append(n.Shortcuts, &Node{})
 	copy(n.Shortcuts[candidateIndex+1:], n.Shortcuts[candidateIndex:])
 	n.Shortcuts[candidateIndex] = shortcut
@@ -130,9 +178,11 @@ func (n *Node) AddShortcut(shortcut *Node) {
 
 func (n *Node) findPredecessor(key int) *Node {
 
-	fmt.Println("Currently at: ", n.Id)
-	fmt.Println("Next: ", n.Succ.Id)
-	fmt.Println("Next Next: ", n.SuccSucc.Id)
+	/*
+		fmt.Println("Currently at: ", n.Id)
+		fmt.Println("Next: ", n.Succ.Id)
+		fmt.Println("Next Next: ", n.SuccSucc.Id)
+	*/
 
 	if n.Id < key && key <= n.Succ.Id {
 
@@ -160,6 +210,8 @@ func (n *Node) findPredecessor(key int) *Node {
 }
 
 func (n *Node) findValue(key int) *Node {
+
+	// Just check if the key is in current node's VALUE set
 
 	if n.Id < key && key <= n.Succ.Id {
 

@@ -5,6 +5,32 @@ import (
 	"testing"
 )
 
+func TestRingDistance(t *testing.T) {
+
+	from := []int{22, 4, 4, 22, 4, 4}
+	to := []int{4, 22, 4, 4, 22, 4}
+	maxSize := []int{100, 100, 100, 100, 100, 100}
+	minSize := []int{0, 0, 0, 1, 1, 1}
+	comparisons := []int{82, 18, 0, 81, 18, 0}
+
+	var testOne int
+
+	for i := 0; i < 6; i++ {
+
+		testOne = RingDistance(from[i], to[i], maxSize[i], minSize[i])
+
+		if testOne != comparisons[i] {
+
+			t.Error("from: ", from[i], "to: ", to[i], "dist: ", testOne, " != ", comparisons[i])
+
+		}
+
+		fmt.Println("Dist: ", testOne)
+
+	}
+
+}
+
 func TestStabilizeAddShortcut(t *testing.T) {
 
 	nodeOne := Node{
@@ -67,12 +93,13 @@ func TestStabilizeAddShortcut(t *testing.T) {
 	nodeOne.MigrateData(maxrange)
 	nodeTwo.MigrateData(maxrange)
 
-	nodeThree.MigrateData(maxrange) /*
-		nodeFour.MigrateData(maxrange)
-		nodeFive.MigrateData(maxrange)
-		nodeSix.MigrateData(maxrange)
-		nodeSeven.MigrateData(maxrange)
+	/*nodeThree.MigrateData(maxrange)
+	nodeFour.MigrateData(maxrange)
+	nodeFive.MigrateData(maxrange)
+	nodeSix.MigrateData(maxrange)
+	nodeSeven.MigrateData(maxrange)
 	*/
+
 	if &nodeOne != nodeSeven.Succ {
 
 		t.Errorf("failed to stabilize")
@@ -87,6 +114,6 @@ func TestStabilizeAddShortcut(t *testing.T) {
 
 	//fmt.Println(nodeTwo.ClosestHopTo(93))
 
-	fmt.Println(nodeOne.findValue(4))
+	//fmt.Println(nodeOne.findValue(4))
 
 }
