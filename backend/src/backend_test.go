@@ -26,6 +26,15 @@ func TestRingDistance(t *testing.T) {
 
 }
 
+func GetNodeIndexById(id int, nodes []Node) int {
+	for k, v := range nodes {
+		if id == v.Id {
+			return k
+		}
+	}
+	return -1
+}
+
 func TestStabilizeAddShortcut(t *testing.T) {
 	assert := assert.New(t)
 
@@ -50,20 +59,37 @@ func TestStabilizeAddShortcut(t *testing.T) {
 	}
 
 	// add some shortcuts
-	nodes[0].AddShortcut(&nodes[3])
-	nodes[0].AddShortcut(&nodes[4])
-	nodes[2].AddShortcut(&nodes[5])
+	nodes[GetNodeIndexById(5, nodes)].AddShortcut(&nodes[GetNodeIndexById(56, nodes)])
+	nodes[GetNodeIndexById(5, nodes)].AddShortcut(&nodes[GetNodeIndexById(71, nodes)])
+	nodes[GetNodeIndexById(22, nodes)].AddShortcut(&nodes[GetNodeIndexById(89, nodes)])
+	// nodes[GetNodeIndexById(92, nodes)].AddShortcut(&nodes[GetNodeIndexById(56, nodes)]) // TODO: fix stack overflow
 
 	// migrate data TODO: for all nodes?
 	for i := 0; i < 2; /*len(nodeIds)*/ i++ {
 		nodes[i].MigrateData(maxrange)
 	}
 
-	assert.Equal(nodes[len(nodes)-1].Succ, &nodes[0], "last node doesn't link to first")
-	assert.Equal(nodes[0].Succ.Succ, &nodes[2], "failed to stabilize SuccSucc")
-	assert.Equal(len(nodes[0].Shortcuts), 2, "failed to add shortcuts")
+	// test shortcuts adding
+	assert.Equal(len(nodes[0].Shortcuts), 2, "should add shortcuts")
 
-	//fmt.Println(nodeTwo.ClosestHopTo(93))
+	// test stabilization
+	assert.Equal(nodes[len(nodes)-1].Succ, &nodes[0], "last node in ring should have first node as Succ")
+	assert.Equal(nodes[0].Succ.Succ, &nodes[2], "should find and add SuccSucc after stabilize")
+
+	// test ClosestHops through SuccSucc
+	assert.Equal(56, nodes[GetNodeIndexById(22, nodes)].ClosestHopTo(56).Id, "should find closest hop [Succ, target, later in circle]")
+	assert.Equal(56, nodes[GetNodeIndexById(22, nodes)].ClosestHopTo(50).Id, "should find closest hop [Succ, target, later in circle]")
+	assert.Equal(5, nodes[GetNodeIndexById(92, nodes)].ClosestHopTo(4).Id, "should find closest hop [Succ, target, accross circle start]")
+	assert.Equal(5, nodes[GetNodeIndexById(92, nodes)].ClosestHopTo(93).Id, "should find closest hop [Succ, target, accross circle start]")
+
+	// test ClosestHops through SuccSucc
+	assert.Equal(17, nodes[GetNodeIndexById(92, nodes)].ClosestHopTo(10).Id, "should find closest hop [SuccSucc, target, across circle start]")
+	assert.Equal(17, nodes[GetNodeIndexById(92, nodes)].ClosestHopTo(19).Id, "should find closest hop [SuccSucc, before target, across circle start]")
+
+	// test ClosestHops through Shortcuts
+	assert.Equal(71, nodes[GetNodeIndexById(5, nodes)].ClosestHopTo(93).Id, "should find closest hop [Shortcut, before target, later in circle]")
+	assert.Equal(89, nodes[GetNodeIndexById(22, nodes)].ClosestHopTo(89).Id, "should find closest hop [Shortcut, target, later in circle]")
+	assert.Equal(56, nodes[GetNodeIndexById(89, nodes)].ClosestHopTo(55).Id, "should find closest hop [Shortcut, target, across circle start]")
 
 	//fmt.Println(nodeOne.findValue(4))
 
