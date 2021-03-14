@@ -3,35 +3,31 @@ package src
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRingDistance(t *testing.T) {
+	assert := assert.New(t)
 
 	from := []int{22, 4, 4, 22, 4, 4}
 	to := []int{4, 22, 4, 4, 22, 4}
 	maxSize := []int{100, 100, 100, 100, 100, 100}
 	minSize := []int{0, 0, 0, 1, 1, 1}
-	comparisons := []int{82, 18, 0, 81, 18, 0}
+	correctResults := []int{82, 18, 0, 81, 18, 0}
 
-	var testOne int
+	var distance int
 
 	for i := 0; i < 6; i++ {
-
-		testOne = RingDistance(from[i], to[i], maxSize[i], minSize[i])
-
-		if testOne != comparisons[i] {
-
-			t.Error("frzom: ", from[i], "to: ", to[i], "dist: ", testOne, " != ", comparisons[i])
-
-		}
-
-		fmt.Println("Dist: ", testOne)
-
+		distance = RingDistance(from[i], to[i], maxSize[i], minSize[i])
+		debugStr := fmt.Sprintf("from: %d to: %d dist: %d != %d", from[i], to[i], distance, correctResults[i])
+		assert.Equal(distance, correctResults[i], debugStr)
 	}
 
 }
 
 func TestStabilizeAddShortcut(t *testing.T) {
+	assert := assert.New(t)
 
 	nodeOne := Node{
 		Id: 5,
@@ -76,7 +72,7 @@ func TestStabilizeAddShortcut(t *testing.T) {
 	nodeSeven.Succ = &nodeOne
 	//nodeEight.Succ = &nodeOne
 
-	fmt.Println(nodeOne)
+	// fmt.Println(nodeOne)
 
 	nodeOne.Stabilize()
 	nodeTwo.Stabilize()
@@ -100,17 +96,8 @@ func TestStabilizeAddShortcut(t *testing.T) {
 	nodeSeven.MigrateData(maxrange)
 	*/
 
-	if &nodeOne != nodeSeven.Succ {
-
-		t.Errorf("failed to stabilize")
-
-	}
-
-	if len(nodeOne.Shortcuts) != 2 {
-
-		t.Errorf("failed to add shortcuts")
-
-	}
+	assert.Equal(&nodeOne, nodeSeven.Succ, "failed stabilize")
+	assert.Equal(len(nodeOne.Shortcuts), 2, "failed to add shortcuts")
 
 	//fmt.Println(nodeTwo.ClosestHopTo(93))
 
