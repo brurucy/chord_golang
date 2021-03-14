@@ -1,7 +1,6 @@
 package src
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -13,6 +12,7 @@ type Node struct {
 	Shortcuts         []*Node
 	StabilizationRate int
 	Values            map[int]bool
+	Ring              *Ring
 }
 
 func AbsInt(x int) int {
@@ -26,7 +26,7 @@ func AbsInt(x int) int {
 
 }
 
-func mod(a, b int) int {
+func Mod(a, b int) int {
 	m := a % b
 	if a < 0 && b < 0 {
 		m -= b
@@ -47,7 +47,7 @@ func Min(a, b int) int {
 func RingDistance(from, to, maxSize, minSize int) int {
 
 	toFrom := to - from
-	maxSizeToFrom := AbsInt((maxSize - to - from))
+	maxSizeToFrom := AbsInt((maxSize - (to - from)))
 
 	result := Min(toFrom, maxSizeToFrom)
 
@@ -61,103 +61,61 @@ func RingDistance(from, to, maxSize, minSize int) int {
 
 	} else {
 
-		result = mod((maxSize - minSize + result), maxSize)
+		result = Mod((maxSize - minSize + result), maxSize)
 		return result
 
 	}
 
 }
 
-func (n *Node) ClosestHopTo(key int) *Node {
+// Find returns the smallest index i at which x == a[i],
+// or len(a) if there is no such index.
+func Find(a []string, x string) int {
+	for i, n := range a {
+		if x == n {
+			return i
+		}
+	}
+	return len(a)
+}
+
+func (n *Node) NextClosestHopTo(key int) *Node {
+
+	// we don't need to consider Succ because we know that SuccSucc doesn't have the value
+	// TODO: what if ring destabilizes and both Suc and SuccSucc don't have value
+	// but actually the key is between Succ and SuccSucc
+
+	// fmt.Println("Calling RingDistance with args", n.SuccSucc.Id, key, n.Ring.MaxSize, n.Ring.MinSize)
+	succSuccDistance := RingDistance(n.SuccSucc.Id, key, n.Ring.MaxSize, n.Ring.MinSize)
+	// fmt.Println("Succsucc", n.SuccSucc.Id, "has distance:", succSuccDistance, "to key:", key)
 
 	if len(n.Shortcuts) == 0 {
 
-		succDistance := AbsInt((n.Succ).Id - key)
-		succSuccDistance := AbsInt((n.SuccSucc).Id - key)
+		// fmt.Println("No shortcuts found, just giving you SuccSucc")
 
-		if key > n.Id {
-
-			if succDistance > succSuccDistance && n.Succ.Id < n.Id {
-
-				return n.Succ
-
-			}
-
-			return n.SuccSucc
-
-		} else {
-
-			if succDistance > succSuccDistance {
-
-				fmt.Println(succDistance, succSuccDistance)
-
-				return n.Succ
-
-			}
-
-			return n.SuccSucc
-
-		}
+		return n.SuccSucc
 
 	} else {
 
-		var possiblyClosestNode *Node
+		// remember best hop among direct successors
+		smallestDistance := succSuccDistance
+		closestHop := n.SuccSucc
 
-		// This is doing a binary search over shortcuts
-		closestValue := sort.Search(len(n.Shortcuts), func(i int) bool { return n.Shortcuts[i].Id >= key })
+		// fmt.Println("Shortcuts found.")
 
-		if closestValue == len(n.Shortcuts) {
+		// check if shortcuts give a better hop than successors
+		for _, shortcut := range n.Shortcuts {
+			shortcutDistance := RingDistance(shortcut.Id, key, n.Ring.MaxSize, n.Ring.MinSize)
+			// fmt.Println("Considering a shortcut through:", shortcut.Id, "with distance", shortcutDistance)
 
-			possiblyClosestNode = n.Shortcuts[closestValue-1]
-
-		} else {
-
-			possiblyClosestNode = n.Shortcuts[closestValue]
-
+			if shortcutDistance < smallestDistance {
+				// fmt.Println("Better path found through shortcut:", shortcut.Id, "with distance", shortcutDistance)
+				smallestDistance = shortcutDistance
+				closestHop = shortcut
+			}
 		}
 
-		succDistance := AbsInt(n.Succ.Id - key)
-		succSuccDistance := AbsInt(n.SuccSucc.Id - key)
-		possiblyClosestNodeDistance := AbsInt(possiblyClosestNode.Id - key)
-
-		distSlice := make(map[int]*Node, 3)
-		distSlice[succDistance] = n.Succ
-		distSlice[succSuccDistance] = n.SuccSucc
-		distSlice[possiblyClosestNodeDistance] = possiblyClosestNode
-
-		closest := n.Succ
-		closestIdx := succDistance
-
-		if key > n.Id {
-
-			for idx, val := range distSlice {
-
-				if idx < closestIdx {
-
-					closest = val
-					closestIdx = idx
-
-				}
-
-			}
-
-		} else {
-
-			for idx, val := range distSlice {
-
-				if idx > closestIdx {
-
-					closest = val
-					closestIdx = idx
-
-				}
-
-			}
-
-		}
-
-		return closest
-
+		return closestHop
 	}
 
 }
@@ -176,7 +134,8 @@ func (n *Node) AddShortcut(shortcut *Node) {
 
 }
 
-func (n *Node) findPredecessor(key int) *Node {
+// FIXME: It most probably doesn't work. Will deal with it later
+func (n *Node) FindPredecessor(key int) *Node {
 
 	/*
 		fmt.Println("Currently at: ", n.Id)
@@ -188,7 +147,7 @@ func (n *Node) findPredecessor(key int) *Node {
 
 		return n
 
-	} else if n.Id < key && n.Id > n.Succ.Id && key <= n.Succ.Id {
+	} else if n.Id < key && n.Id > n.Succ.Id && key <= n.Succ.Id { // key=5 n=4 suc=1
 
 		return n
 
@@ -202,40 +161,53 @@ func (n *Node) findPredecessor(key int) *Node {
 
 	} else {
 
-		nextHop := n.ClosestHopTo(key)
-		return nextHop.findValue(key)
+		nextHop := n.NextClosestHopTo(key)
+		return nextHop.Lookup(key)
 
 	}
 
 }
 
-func (n *Node) findValue(key int) *Node {
+func (n *Node) HasValue(key int) bool {
+	return n.Values[key]
+}
 
-	// Just check if the key is in current node's VALUE set
+func ShouldContainValue(id int, key int, predId int) bool {
+	return id >= key && key > predId
+}
 
-	if n.Id < key && key <= n.Succ.Id {
+func (n *Node) Lookup(key int) *Node {
+	var emptyNode Node
 
-		return n.Succ
-
-	} else if n.Id < key && n.Id > n.Succ.Id && key <= n.Succ.Id {
-
-		return n.Succ
-
-	} else if n.Id < key && n.Id > n.Succ.Id && key >= n.Succ.Id {
-
-		return n.Succ
-
-	} else if n.Id > key && n.Id > n.Succ.Id && key <= n.Succ.Id {
-
-		return n.Succ
-
-	} else {
-
-		nextHop := n.ClosestHopTo(key)
-		return nextHop.findValue(key)
-
+	// See if we have value already
+	if n.Values[key] {
+		return n
 	}
 
+	// should succ have value?
+	if ShouldContainValue(n.Succ.Id, key, n.Id) {
+
+		// then ask her!
+		if n.Succ.HasValue(key) {
+			return n.Succ
+		} else {
+			return &emptyNode // TODO: define behavior when key not found
+		}
+	}
+
+	// should succsucc have value?
+	if ShouldContainValue(n.SuccSucc.Id, key, n.Succ.Id) {
+
+		// then ask her!
+		if n.Succ.HasValue(key) {
+			return n.SuccSucc
+		} else {
+			return &emptyNode // TODO: define behavior when key not found
+		}
+	}
+
+	nextHop := n.NextClosestHopTo(key)
+	return nextHop.Lookup(key)
 }
 
 func (n *Node) Stabilize() {
@@ -290,7 +262,7 @@ func (n *Node) MigrateData(maxRange int) {
 
 	values := make(map[int]bool)
 
-	pred := (*(n.findPredecessor(n.Id))).Id
+	pred := (*(n.FindPredecessor(n.Id))).Id
 
 	if pred < n.Id {
 
