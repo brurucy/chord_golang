@@ -21,7 +21,7 @@ func TestRingDistance(t *testing.T) {
 
 		if testOne != comparisons[i] {
 
-			t.Error("from: ", from[i], "to: ", to[i], "dist: ", testOne, " != ", comparisons[i])
+			t.Error("frzom: ", from[i], "to: ", to[i], "dist: ", testOne, " != ", comparisons[i])
 
 		}
 
