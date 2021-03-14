@@ -134,38 +134,21 @@ func (n *Node) AddShortcut(shortcut *Node) {
 
 }
 
-// FIXME: It most probably doesn't work. Will deal with it later
 func (n *Node) FindPredecessor(key int) *Node {
 
-	/*
-		fmt.Println("Currently at: ", n.Id)
-		fmt.Println("Next: ", n.Succ.Id)
-		fmt.Println("Next Next: ", n.SuccSucc.Id)
-	*/
-
-	if n.Id < key && key <= n.Succ.Id {
-
+	// should succ contain key?
+	if ShouldContainValue(n.Succ.Id, key, n.Id) {
 		return n
-
-	} else if n.Id < key && n.Id > n.Succ.Id && key <= n.Succ.Id { // key=5 n=4 suc=1
-
-		return n
-
-	} else if n.Id < key && n.Id > n.Succ.Id && key >= n.Succ.Id {
-
-		return n
-
-	} else if n.Id > key && n.Id > n.Succ.Id && key <= n.Succ.Id {
-
-		return n
-
-	} else {
-
-		nextHop := n.NextClosestHopTo(key)
-		return nextHop.Lookup(key)
-
 	}
 
+	// should succsucc contain key?
+	if ShouldContainValue(n.SuccSucc.Id, key, n.Succ.Id) {
+		return n.Succ
+	}
+
+	nextHop := n.NextClosestHopTo(key)
+
+	return nextHop.FindPredecessor(key)
 }
 
 func (n *Node) HasValue(key int) bool {
@@ -173,7 +156,24 @@ func (n *Node) HasValue(key int) bool {
 }
 
 func ShouldContainValue(id int, key int, predId int) bool {
-	return id >= key && key > predId
+
+	if predId < key && key <= id {
+
+		return true
+
+	} else if predId < key && predId > id && key <= id {
+
+		return true
+
+	} else if predId < key && predId > id && key >= id {
+
+		return true
+
+	} else if predId > key && predId > id && key <= id {
+
+		return true
+	}
+	return false
 }
 
 func (n *Node) Lookup(key int) *Node {

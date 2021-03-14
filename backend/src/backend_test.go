@@ -67,12 +67,11 @@ func TestStabilizeAddShortcut(t *testing.T) {
 	nodes[GetNodeIndexById(22, nodes)].AddShortcut(&nodes[GetNodeIndexById(89, nodes)])
 	nodes[GetNodeIndexById(92, nodes)].AddShortcut(&nodes[GetNodeIndexById(56, nodes)])
 
-	// FIXME: stopped working after rewriting `NextClosestHop` and `Lookup` methods
-	// TODO: run for all nodes?
+	// TODO: ask Rucy what is this
 	// migrate data
-	// for i := 0; i < 2; /*len(nodeIds)*/ i++ {
-	// 	nodes[i].MigrateData(maxrange)
-	// }
+	for i := 0; i < 2; /*len(nodeIds)*/ i++ {
+		nodes[i].MigrateData(maxrange)
+	}
 
 	// test shortcuts adding
 	assert.Equal(len(nodes[0].Shortcuts), 2, "should add shortcuts")
@@ -85,17 +84,22 @@ func TestStabilizeAddShortcut(t *testing.T) {
 	assert.Equal(89, nodes[GetNodeIndexById(22, nodes)].NextClosestHopTo(56).Id, "should find closest hop. [22 hops 56 should find 89]")
 	assert.Equal(89, nodes[GetNodeIndexById(22, nodes)].NextClosestHopTo(50).Id, "should find closest hop. [22 hops 50 should find 89]")
 
-	assert.Equal(56, nodes[GetNodeIndexById(92, nodes)].NextClosestHopTo(4).Id, "should find closest hop. [92 hops 4 should find 17]")
 	assert.Equal(17, nodes[GetNodeIndexById(92, nodes)].NextClosestHopTo(93).Id, "should find closest hop. [92 hops 93 should find 17]")
 
 	// test ClosestHops through SuccSucc
-	assert.Equal(56, nodes[GetNodeIndexById(92, nodes)].NextClosestHopTo(10).Id, "should find closest hop. [92 hops 10 should find 17]")
+	assert.Equal(17, nodes[GetNodeIndexById(92, nodes)].NextClosestHopTo(19).Id, "should find closest hop. [92 hops 19 should find 17]")
 	assert.Equal(17, nodes[GetNodeIndexById(92, nodes)].NextClosestHopTo(19).Id, "should find closest hop. [92 hops 19 should find 17]")
 
 	// test ClosestHops through Shortcuts
 	assert.Equal(71, nodes[GetNodeIndexById(5, nodes)].NextClosestHopTo(93).Id, "should find closest hop. [5 hops 93 should find 71]")
 	assert.Equal(89, nodes[GetNodeIndexById(22, nodes)].NextClosestHopTo(89).Id, "should find closest hop. [22 hops 89 should find 89 ]")
 	assert.Equal(89, nodes[GetNodeIndexById(22, nodes)].NextClosestHopTo(90).Id, "should find closest hop. [22 hops 90 should find 89]")
+	assert.Equal(56, nodes[GetNodeIndexById(92, nodes)].NextClosestHopTo(4).Id, "should find closest hop. [92 hops 4 should find 17]")
+	assert.Equal(56, nodes[GetNodeIndexById(92, nodes)].NextClosestHopTo(10).Id, "should find closest hop. [92 hops 10 should find 17]")
+
+	// test FindPredecessor
+	assert.Equal(5, nodes[GetNodeIndexById(17, nodes)].FindPredecessor(17).Id, "should find predecessor")
+	assert.Equal(92, nodes[GetNodeIndexById(5, nodes)].FindPredecessor(5).Id, "should find predecessor")
 
 	//fmt.Println(nodeOne.Lookup(4))
 
