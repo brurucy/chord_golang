@@ -10,18 +10,22 @@ import (
 func TestRingDistance(t *testing.T) {
 	assert := assert.New(t)
 
-	from := []int{22, 4, 4, 22, 4, 4}
-	to := []int{4, 22, 4, 4, 22, 4}
-	maxSize := []int{100, 100, 100, 100, 100, 100}
-	minSize := []int{0, 0, 0, 1, 1, 1}
-	correctResults := []int{82, 18, 0, 81, 18, 0}
+	cases := [][5]int{
+		/*from, to, max, min, result*/
+		{22, 4, 100, 0, 82},
+		{4, 22, 100, 0, 18},
+		{4, 4, 100, 0, 0},
+		{22, 4, 100, 1, 81},
+		{4, 22, 100, 1, 18},
+		{4, 4, 100, 1, 0},
+	}
 
 	var distance int
 
-	for i := 0; i < 6; i++ {
-		distance = RingDistance(from[i], to[i], maxSize[i], minSize[i])
-		debugStr := fmt.Sprintf("from: %d to: %d dist: %d != %d", from[i], to[i], distance, correctResults[i])
-		assert.Equal(distance, correctResults[i], debugStr)
+	for _, testCase := range cases {
+		distance = RingDistance(testCase[0], testCase[1], testCase[2], testCase[3])
+		debugStr := fmt.Sprintf("from: %d to: %d dist: %d != %d", testCase[0], testCase[1], distance, testCase[4])
+		assert.Equal(testCase[4], distance, debugStr)
 	}
 
 }
