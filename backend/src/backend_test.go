@@ -105,6 +105,4 @@ func TestStabilizeAddShortcut(t *testing.T) {
 	assert.Equal(5, nodes[GetNodeIndexById(17, nodes)].FindPredecessor(17).Id, "should find predecessor")
 	assert.Equal(92, nodes[GetNodeIndexById(5, nodes)].FindPredecessor(5).Id, "should find predecessor")
 
-	//fmt.Println(nodeOne.Lookup(4))
-
 }

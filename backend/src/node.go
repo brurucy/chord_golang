@@ -81,17 +81,12 @@ func Find(a []string, x string) int {
 
 func (n *Node) NextClosestHopTo(key int) *Node {
 
-	// we don't need to consider Succ because we know that SuccSucc doesn't have the value
+	// we don't need to consider Succ because by this moment we know that SuccSucc doesn't have the value
 	// TODO: what if ring destabilizes and both Suc and SuccSucc don't have value
-	// but actually the key is between Succ and SuccSucc
-
-	// fmt.Println("Calling RingDistance with args", n.SuccSucc.Id, key, n.Ring.MaxSize, n.Ring.MinSize)
+	// while actually the key is between Succ and SuccSucc
 	succSuccDistance := RingDistance(n.SuccSucc.Id, key, n.Ring.MaxSize, n.Ring.MinSize)
-	// fmt.Println("Succsucc", n.SuccSucc.Id, "has distance:", succSuccDistance, "to key:", key)
 
 	if len(n.Shortcuts) == 0 {
-
-		// fmt.Println("No shortcuts found, just giving you SuccSucc")
 
 		return n.SuccSucc
 
@@ -101,15 +96,11 @@ func (n *Node) NextClosestHopTo(key int) *Node {
 		smallestDistance := succSuccDistance
 		closestHop := n.SuccSucc
 
-		// fmt.Println("Shortcuts found.")
-
 		// check if shortcuts give a better hop than successors
 		for _, shortcut := range n.Shortcuts {
 			shortcutDistance := RingDistance(shortcut.Id, key, n.Ring.MaxSize, n.Ring.MinSize)
-			// fmt.Println("Considering a shortcut through:", shortcut.Id, "with distance", shortcutDistance)
 
 			if shortcutDistance < smallestDistance {
-				// fmt.Println("Better path found through shortcut:", shortcut.Id, "with distance", shortcutDistance)
 				smallestDistance = shortcutDistance
 				closestHop = shortcut
 			}
