@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package pb;
+import "google/protobuf/empty.proto";
+
+option go_package = "chord_backend/pb";
+
+service Chord {
+
+  rpc Ping (google.protobuf.Empty) returns (PingResponse) {}
+  rpc SetSucc (Node) returns (google.protobuf.Empty) {}
+  rpc SetSuccSucc (Node) returns (google.protobuf.Empty) {}
+
+}
+
+message Node {
+  int32 id = 1;
+  string address = 2;
+}
+
+message PingResponse {
+  bool alive = 1;
+}
