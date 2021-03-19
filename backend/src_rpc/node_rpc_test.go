@@ -240,6 +240,31 @@ func TestJoinStabilize(t *testing.T) {
 		Address: chordServers[6].node.Address})
 	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
 
+	if chordServers[6].succ.Id != 5 {
+
+		t.Errorf("Failed setting succ of 92, 5")
+
+	}
+
+	if chordServers[6].succSucc.Id != chordServers[6].node.Id {
+
+		t.Errorf("Failed setting succ succ of 92, 92")
+
+	}
+
+	if chordServers[0].succ.Id != 92 {
+
+		t.Errorf("Failed setting succ of 5, 92")
+
+	}
+
+	if chordServers[0].succSucc.Id != chordServers[0].node.Id {
+
+		t.Errorf("Failed setting succ succ of 5, 5")
+
+	}
+
+
 	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
 	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
 
@@ -252,6 +277,31 @@ func TestJoinStabilize(t *testing.T) {
 	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
 	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
 	fmt.Println(*chordServers[1].node, *chordServers[1].succ, *chordServers[1].succSucc)
+
+	if chordServers[6].succ.Id != 5 {
+
+		t.Errorf("Failed setting succ of 92, 5")
+
+	}
+
+	if chordServers[6].succSucc.Id != 17 {
+
+		t.Errorf("Failed setting succ succ of 92, 17")
+
+	}
+
+	if chordServers[0].succ.Id != 17 {
+
+		t.Errorf("Failed setting succ of 5, 17")
+
+	}
+
+	if chordServers[0].succSucc.Id != 92 {
+
+		t.Errorf("Failed setting succ succ of 5, 92")
+
+	}
+
 
 	for _, val := range grpcServers{
 

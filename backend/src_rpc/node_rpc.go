@@ -17,7 +17,6 @@ type ChordServer struct {
 	node *ChordNode
 	succ *ChordNode
 	succSucc *ChordNode
-	pred *ChordNode
 }
 
 func (s *ChordServer) Ping(context.Context, *empty.Empty) (*pb.PingResponse, error) {
