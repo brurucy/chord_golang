@@ -175,8 +175,6 @@ func TestFindSuccessorAndFindPredecessor(t *testing.T)  {
 
 	}
 
-	fmt.Println("Here?")
-
 	edge_one, _ = chordServers[6].FindPredecessor(context.Background(), &pb.FindPredecessorRequest{Id: 4})
 
 	if edge_one.Id != 92 {
@@ -185,7 +183,7 @@ func TestFindSuccessorAndFindPredecessor(t *testing.T)  {
 
 	}
 
-	edge_two, _ = chordServers[6].FindPredecessor(context.Background(), &pb.FindPredecessorRequest{Id: 17})
+	edge_two, _ = chordServers[6].FindPredecessor(context.Background(), &pb.FindPredecessorRequest{Id: 16})
 
 	if edge_two.Id != 5 {
 
