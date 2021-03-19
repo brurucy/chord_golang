@@ -101,7 +101,7 @@ func TestNodePing(t *testing.T) {
 
 }
 
-func TestNodeJoin(t *testing.T)  {
+func TestFindSuccessorAndFindPredecessor(t *testing.T)  {
 
 	// Initializing
 	done := make(chan bool)
@@ -139,13 +139,68 @@ func TestNodeJoin(t *testing.T)  {
 		fmt.Println(*vals.node, *vals.succ)
 	}
 
-	fmt.Println(chordServers[6].FindSuccessor(context.Background(), &pb.FindSuccessorRequest{Id: 94}))
-	fmt.Println(chordServers[6].FindPredecessor(context.Background(), &pb.FindPredecessorRequest{Id: 94}))
+	// Find Successor tests
+
+	base_case, _ := chordServers[0].FindSuccessor(context.Background(), &pb.FindSuccessorRequest{Id: 55})
+
+	if base_case.Id != 56 {
+
+		t.Errorf("Failed base case find successor %v", base_case.Id)
+
+	}
+
+	edge_one, _ := chordServers[6].FindSuccessor(context.Background(), &pb.FindSuccessorRequest{Id: 4})
+
+	if edge_one.Id != 5 {
+
+		t.Errorf("Failed edge case one find successor %v", edge_one.Id)
+
+	}
+
+	edge_two, _ := chordServers[6].FindSuccessor(context.Background(), &pb.FindSuccessorRequest{Id: 94})
+
+	if edge_two.Id != 5 {
+
+		t.Errorf("Failed edge case two find successor %v", edge_two.Id)
+
+	}
+
+	// Find Predecessor tests
+
+	base_case, _ = chordServers[0].FindPredecessor(context.Background(), &pb.FindPredecessorRequest{Id: 91})
+
+	if base_case.Id != 89 {
+
+		t.Errorf("Failed base case find successor %v", base_case.Id)
+
+	}
+
+	fmt.Println("Here?")
+
+	edge_one, _ = chordServers[6].FindPredecessor(context.Background(), &pb.FindPredecessorRequest{Id: 4})
+
+	if edge_one.Id != 92 {
+
+		t.Errorf("Failed edge case one find successor %v", edge_one.Id)
+
+	}
+
+	edge_two, _ = chordServers[6].FindPredecessor(context.Background(), &pb.FindPredecessorRequest{Id: 17})
+
+	if edge_two.Id != 5 {
+
+		t.Errorf("Failed edge case two find successor %v", edge_two.Id)
+
+	}
+
+	// Stop all
 
 	for _, val := range grpcServers{
 
 		val.Stop()
 
 	}
+
+
 
 }

@@ -48,10 +48,31 @@ func (s *ChordServer) SetSuccSucc(ctx context.Context, node *pb.Node) (*empty.Em
 
 func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
 
-	successor := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: node.Id})
-	predecessor := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: node.Id})
+	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: node.Id})
+	predecessor, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: node.Id})
 
-
+	// Setting node's successor
+	conn, err := grpc.Dial(node.Address, grpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	c := pb.NewChordClient(conn)
+	_, err = c.SetSucc(ctx, successor)
+	if err != nil {
+		return nil, err
+	}
+	// Setting node's predecessor
+	conn, err = grpc.Dial(predecessor.Address, grpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	c = pb.NewChordClient(conn)
+	_, err = c.SetSucc(ctx, node)
+	if err != nil {
+		return nil, err
+	}
 
 	return nil, nil
 }
