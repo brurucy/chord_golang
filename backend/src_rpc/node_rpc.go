@@ -5,6 +5,7 @@ import (
 	"context"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"log"
 )
 
 type ChordNode struct{
@@ -49,8 +50,9 @@ func (s *ChordServer) SetSuccSucc(ctx context.Context, node *pb.Node) (*empty.Em
 func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
 
 	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: node.Id})
+	log.Printf("Successor: %v", successor)
 	predecessor, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: node.Id})
-
+	log.Printf("Predecessor: %v", predecessor)
 	// Setting node's successor
 	conn, err := grpc.Dial(node.Address, grpc.WithInsecure())
 	if err != nil {
@@ -89,6 +91,8 @@ func (s *ChordServer) FindSuccessor(ctx context.Context, request *pb.FindSuccess
 	// Second Edge Case i.e seeking 94 from 92
 	} else if candidatePred > s.node.Id && s.node.Id > s.succ.Id {
 		return &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, nil
+	} else if candidatePred > s.node.Id && s.succ.Id == s.node.Id {
+		return &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, nil
 	} else {
 		node, err := s.succ.FindSuccessor(ctx, request.Id)
 		if err != nil {
@@ -110,6 +114,8 @@ func (s *ChordServer) FindPredecessor(ctx context.Context, request *pb.FindPrede
 		return &pb.Node{Id: s.node.Id, Address: s.node.Address}, nil
 		// Second Edge Case i.e seeking 94 from 92
 	} else if candidatePred > s.node.Id && s.node.Id > s.succ.Id {
+		return &pb.Node{Id: s.node.Id, Address: s.node.Address}, nil
+	} else if candidatePred > s.node.Id && s.succ.Id == s.node.Id {
 		return &pb.Node{Id: s.node.Id, Address: s.node.Address}, nil
 	} else {
 		node, err := s.succ.FindPredecessor(ctx, request.Id)

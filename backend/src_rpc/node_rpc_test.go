@@ -199,6 +199,48 @@ func TestFindSuccessorAndFindPredecessor(t *testing.T)  {
 
 	}
 
+}
 
+func TestJoin(t *testing.T) {
+
+	done := make(chan bool)
+	var chordServers []*ChordServer
+	var grpcServers [] *grpc.Server
+	ids := []int32{5, 17, 22, 56, 71, 89, 92}
+	var addr []string
+	addrBase := 10000
+	n := 7
+	for i := 0; i < n; i++ {
+		addr = append(addr, fmt.Sprintf("127.0.0.1:%v", i+addrBase))
+	}
+	for i := 0; i < n; i++ {
+		chordServers = append(chordServers, &ChordServer{node:
+		&ChordNode{Address: addr[i], Id: ids[i]}})
+		grpcServers = append(grpcServers, grpc.NewServer())
+		go runServer(grpcServers[i], chordServers[i], done)
+		fmt.Println(*chordServers[i].node)
+	}
+	for i := 0; i < n; i++ {
+		<-done
+	}
+
+	// First Server Node
+	chordServers[0].SetSucc(context.Background(), &pb.Node{Id: chordServers[0].node.Id,
+		Address: chordServers[0].node.Address})
+
+	fmt.Println(*chordServers[0].node, *chordServers[0].succ)
+
+	//fmt.Println(chordServers[0].FindSuccessor(context.Background(), &pb.FindSuccessorRequest{Id: chordServers[1].node.Id}))
+
+	chordServers[0].Join(context.Background(), &pb.Node{Id: chordServers[6].node.Id,
+		Address: chordServers[6].node.Address})
+
+	fmt.Println(*chordServers[0].node, *chordServers[0].succ)
+
+	for _, val := range grpcServers{
+
+		val.Stop()
+
+	}
 
 }
