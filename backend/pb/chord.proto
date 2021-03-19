@@ -16,6 +16,11 @@ service Chord {
   rpc Stabilize (google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc StabilizeAll (google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc ClosestNodeTo (ClosestNodeToRequest) returns (Node) {}
+  rpc Lookup (LookupRequest) returns (Node) {}
+}
+
+message LookupRequest {
+  int32 id = 1;
 }
 
 message FindSuccessorRequest {

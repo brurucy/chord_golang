@@ -120,7 +120,7 @@ func TestFindSuccessorAndFindPredecessor(t *testing.T)  {
 			&ChordNode{Address: addr[i], Id: ids[i]}})
 		grpcServers = append(grpcServers, grpc.NewServer())
 		go runServer(grpcServers[i], chordServers[i], done)
-		fmt.Println(*chordServers[i].node)
+		//fmt.Println(*chordServers[i].node)
 	}
 	for i := 0; i < n; i++ {
 		<-done
@@ -137,7 +137,15 @@ func TestFindSuccessorAndFindPredecessor(t *testing.T)  {
 			vals.SetSucc(context.Background(), &pb.Node{Id: chordServers[0].node.Id,
 				Address: chordServers[0].node.Address})
 		}
-		fmt.Println(*vals.node, *vals.succ)
+
+	}
+
+	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
+
+	for _, vals := range chordServers {
+
+		fmt.Println(*vals.node, *vals.succ, *vals.succSucc)
+
 	}
 
 	// Find Successor tests
@@ -237,7 +245,7 @@ func TestJoinStabilize(t *testing.T) {
 	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
 
 	// Nothing in it
-	fmt.Println(*chordServers[0].node, *chordServers[0].succ)
+	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
 	fmt.Println("Inserting 92")
 	// Joining 92 on 5
 	chordServers[6].minSize = min
@@ -274,7 +282,7 @@ func TestJoinStabilize(t *testing.T) {
 	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
 	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
 
-	fmt.Println("Inserting 17")
+	fmt.Println("Inserting 17 and 56")
 	// Joining 17 on 92 and 56 on 5
 	chordServers[1].minSize = min
 	chordServers[1].maxSize = max
@@ -283,13 +291,34 @@ func TestJoinStabilize(t *testing.T) {
 
 	chordServers[6].Join(context.Background(), &pb.Node{Id: chordServers[1].node.Id,
 		Address: chordServers[1].node.Address})
-	chordServers[0].Join(context.Background(), &pb.Node{Id: chordServers[3].node.Id,
-		Address: chordServers[3].node.Address})
-	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
 
-	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
+	fmt.Println("Before stabilize")
+	fmt.Println(*chordServers[0].node, *chordServers[0].succ)
+	fmt.Println(*chordServers[1].node, *chordServers[1].succ)
+	fmt.Println(*chordServers[6].node, *chordServers[6].succ)
+	fmt.Println("----")
+
+	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
+	fmt.Println("After stabilize")
 	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
 	fmt.Println(*chordServers[1].node, *chordServers[1].succ, *chordServers[1].succSucc)
+	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
+	fmt.Println("----")
+
+	chordServers[0].Join(context.Background(), &pb.Node{Id: chordServers[3].node.Id,
+		Address: chordServers[3].node.Address})
+
+	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
+
+	//5->17->56-92->5
+	//92->5->17
+	//17->56-92
+	//56->92->5
+
+	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
+	fmt.Println(*chordServers[1].node, *chordServers[1].succ, *chordServers[1].succSucc)
+	fmt.Println(*chordServers[3].node, *chordServers[3].succ, *chordServers[3].succSucc)
+	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
 
 	if chordServers[6].succ.Id != 5 {
 
@@ -371,11 +400,14 @@ func TestClosestNodeTo(t *testing.T) {
 
 	ctx := context.Background()
 
+	/*
 	for _, val := range chordServers {
 
 		fmt.Println("Node id:", val.node.Id, "Successor id:",val.succ.Id,"SuccSucc id:", val.succSucc.Id)
 
 	}
+
+	 */
 
 	// What's the closest node, connected to 0, that would allow us to jump the closest to 18?, 17 or 22?
 	closestToTestBase, _ := chordServers[0].ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: 18})
@@ -400,9 +432,52 @@ func TestClosestNodeTo(t *testing.T) {
 	}
 	if closestToTestEdgeThree.Id != 5 {
 
-		t.Errorf("ClosestNodeTo estimated wrong %v", closestToTestEdgeThree)
+		t.Errorf("ClosestNodeTo estimated wrong %v %v %v", closestToTestEdgeThree, chordServers[6].minSize, chordServers[6].maxSize)
 
 	}
+
+
+	for _, val := range grpcServers{
+
+		val.Stop()
+
+	}
+
+}
+
+func TestShouldContainValue(t *testing.T) {
+	// Based on the ring 5, 17, 22, 56, 71, 89, 92, 5
+	// Base case in - 5 -> 17, looking for 16.
+	// Base case not in - 5 -> 17, looking for 18
+	// Edge case in - 92 -> 5, looking for 5
+
+	if ShouldContainValue(17, 16, 5) != true {
+		t.Errorf("cry")
+	}
+	if ShouldContainValue(17, 18, 5) != false {
+		t.Errorf("cry")
+	}
+	if ShouldContainValue(5, 5, 92) != false {
+		t.Errorf("cry")
+	}
+	if ShouldContainValueTwo(5, 5, 92) != true {
+		t.Errorf("cry")
+	}
+
+}
+
+func TestLookup(t *testing.T) {
+
+	chordServers, grpcServers := materializeAllNodes()
+
+	ctx := context.Background()
+
+	lookupOne, _ := chordServers[0].Lookup(ctx, &pb.LookupRequest{Id: 101})
+
+	if lookupOne != nil {
+		t.Errorf("panik")
+	}
+
 
 
 	for _, val := range grpcServers{

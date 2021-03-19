@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
-	"log"
+	//"log"
 )
+
 
 type ChordNode struct{
 	Id int32
@@ -80,7 +81,7 @@ func (s *ChordServer) StabilizeAll(ctx context.Context, e *empty.Empty) (*empty.
 
 	for current.Id != startId {
 
-		fmt.Println("Currently at: ", current.Id)
+		//fmt.Println("Currently at: ", current.Id)
 
 		conn, err := grpc.Dial(current.Address, grpc.WithInsecure())
 		if err != nil {
@@ -105,10 +106,17 @@ func (s *ChordServer) StabilizeAll(ctx context.Context, e *empty.Empty) (*empty.
 }
 
 func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
+
+	if node.Id > s.maxSize || node.Id < s.minSize {
+
+		return &empty.Empty{}, nil
+
+	}
+
 	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: node.Id})
-	log.Printf("Successor: %v", successor)
+	//log.Printf("Successor: %v", successor)
 	predecessor, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: node.Id})
-	log.Printf("Predecessor: %v", predecessor)
+	//log.Printf("Predecessor: %v", predecessor)
 	// Updating Successors
 	// Setting node's successor
 	conn, err := grpc.Dial(node.Address, grpc.WithInsecure())
@@ -117,15 +125,12 @@ func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, er
 		return &empty.Empty{}, err
 	}
 	defer conn.Close()
-	fmt.Println("Here?")
 	c := pb.NewChordClient(conn)
 	_, err = c.SetSucc(ctx, successor)
-	fmt.Println("Here I guess")
 	if err != nil {
 		fmt.Println("Error setting the node's successor")
 		return &empty.Empty{}, err
 	}
-	fmt.Println("Or Here?")
 	// Setting the node's predecessor successor
 	conn, err = grpc.Dial(predecessor.Address, grpc.WithInsecure())
 	if err != nil {
@@ -133,7 +138,6 @@ func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, er
 		return &empty.Empty{}, err
 	}
 	defer conn.Close()
-	fmt.Println("Or here??")
 	c = pb.NewChordClient(conn)
 	_, err = c.SetSucc(ctx, node)
 	if err != nil {
@@ -144,21 +148,34 @@ func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, er
 	return &empty.Empty{}, err
 }
 
+// We are 5
+// Succ is 7
+// SuccSucc i 9
+// 5-7-9-20-30-39-47
+// Finger table, 39, 47
+// key = 19
+//
+// Fingertable points to 39, 47
+
 func (s *ChordServer) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.Node, error) {
-	candidatePred := request.Id
-	// Base case i.e seeking 70 from 17
-	if candidatePred > s.node.Id && candidatePred < s.succ.Id {
+
+	if ShouldContainValue(s.succ.Id, request.Id, s.node.Id) {
+
 		return &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, nil
-	// First Edge Case i.e seeking 4 from 92
-	} else if candidatePred < s.node.Id && s.node.Id > s.succ.Id && candidatePred < s.succ.Id {
-		return &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, nil
-	// Second Edge Case i.e seeking 94 from 92, where 92 is the LAST node before the FIRST
-	} else if candidatePred > s.node.Id && s.node.Id > s.succ.Id {
-		return &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, nil
-	// Third Edge Case i.e, where a node equals its successor
-	} else if candidatePred > s.node.Id && s.succ.Id == s.node.Id {
-		return &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, nil
+
+	/*} else if s.succSucc != nil && ShouldContainValue(s.succSucc.Id, request.Id, s.succ.Id) {
+
+		return &pb.Node{Id: s.succSucc.Id, Address: s.succSucc.Address}, nil
+*/
 	} else {
+		/*
+		next, _ := s.ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: request.Id})
+		nextNode := ChordNode{
+			Id:      next.Id,
+			Address: next.Address,
+		}
+		node, err := nextNode.FindSuccessor(ctx, request.Id)
+		*/
 		node, err := s.succ.FindSuccessor(ctx, request.Id)
 		if err != nil {
 			return nil, err
@@ -228,17 +245,76 @@ func (s *ChordServer) ClosestNodeTo(ctx context.Context, n *pb.ClosestNodeToRequ
 
 	distanceFromSucc := RingDistance(s.succ.Id, n.Id, s.maxSize, s.minSize)
 	distanceFromSuccSucc := RingDistance(s.succSucc.Id, n.Id, s.maxSize, s.minSize)
+	fmt.Println(s.node.Id,"Distance from", s.succ.Id, "to query",n.Id, ":",distanceFromSucc)
+	fmt.Println(s.node.Id, "Distance from", s.succSucc.Id, "to query",n.Id, ":",distanceFromSuccSucc)
 	var closestNode *ChordNode
 
-	if distanceFromSuccSucc > distanceFromSucc {
+	//Base Case
+
+	if distanceFromSucc < distanceFromSuccSucc && n.Id > s.node.Id && s.node.Id > s.succ.Id {
+		closestNode = s.succ
+	} else if distanceFromSuccSucc > distanceFromSucc && n.Id > s.succ.Id {
+		closestNode = s.succSucc
+	} else if distanceFromSucc > distanceFromSuccSucc && n.Id < s.succ.Id {
+		closestNode = s.succ
+	} else if distanceFromSuccSucc < distanceFromSucc {
 		closestNode = s.succSucc
 	} else {
 		closestNode = s.succ
 	}
+	//fmt.Println("Chosen", closestNode)
+
 
 	return &pb.Node{
 		Id:      closestNode.Id,
 		Address: closestNode.Address,
 	}, nil
+
+}
+
+func (n *ChordNode) Lookup(ctx context.Context, id int32) (*ChordNode, error) {
+	conn, err := grpc.Dial(n.Address, grpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	c := pb.NewChordClient(conn)
+	r, err := c.Lookup(ctx, &pb.LookupRequest{Id: id})
+	if err != nil {
+		return nil, err
+	}
+	return &ChordNode{r.Id, r.Address}, nil
+}
+
+
+func (s *ChordServer) Lookup(ctx context.Context, request *pb.LookupRequest) (*pb.Node, error) {
+
+	if request.Id > s.maxSize || request.Id < s.minSize {
+
+		return nil, nil
+
+	} else if ShouldContainValueTwo(s.succ.Id, request.Id, s.node.Id) {
+
+		return &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, nil
+
+	} else if ShouldContainValueTwo(s.succ.Id, request.Id, s.node.Id) {
+
+		return &pb.Node{Id: s.succSucc.Id, Address: s.succSucc.Address}, nil
+
+	} else {
+		/*
+			next, _ := s.ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: request.Id})
+			nextNode := ChordNode{
+				Id:      next.Id,
+				Address: next.Address,
+			}
+			node, err := nextNode.FindSuccessor(ctx, request.Id)
+		*/
+		lookupResponse, err := s.succSucc.Lookup(ctx, request.Id)
+		if err != nil {
+			return nil, err
+		}
+		return &pb.Node{Id: lookupResponse.Id, Address: lookupResponse.Address}, nil
+	}
 
 }
