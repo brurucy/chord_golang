@@ -103,6 +103,7 @@ func TestNodePing(t *testing.T) {
 
 func TestNodeJoin(t *testing.T)  {
 
+	// Initializing
 	done := make(chan bool)
 	var chordServers []*ChordServer
 	var grpcServers [] *grpc.Server
@@ -123,11 +124,28 @@ func TestNodeJoin(t *testing.T)  {
 	for i := 0; i < n; i++ {
 		<-done
 	}
+
+	// Manually Linking
+	for idx, vals := range chordServers {
+
+		if idx < len(chordServers)-1 {
+
+			vals.SetSucc(context.Background(), &pb.Node{Id: chordServers[idx+1].node.Id,
+				Address: chordServers[idx+1].node.Address})
+		} else {
+			vals.SetSucc(context.Background(), &pb.Node{Id: chordServers[0].node.Id,
+				Address: chordServers[0].node.Address})
+		}
+		fmt.Println(*vals.node, *vals.succ)
+	}
+
+	fmt.Println(chordServers[6].FindSuccessor(context.Background(), &pb.FindSuccessorRequest{Id: 94}))
+	fmt.Println(chordServers[6].FindPredecessor(context.Background(), &pb.FindPredecessorRequest{Id: 94}))
+
 	for _, val := range grpcServers{
 
 		val.Stop()
 
 	}
-
 
 }

@@ -10,7 +10,17 @@ service Chord {
   rpc Ping (google.protobuf.Empty) returns (PingResponse) {}
   rpc SetSucc (Node) returns (google.protobuf.Empty) {}
   rpc SetSuccSucc (Node) returns (google.protobuf.Empty) {}
+  rpc FindSuccessor(FindSuccessorRequest) returns (Node) {}
+  rpc FindPredecessor(FindPredecessorRequest) returns (Node) {}
+  rpc Join (Node) returns (google.protobuf.Empty) {}
+}
 
+message FindSuccessorRequest {
+  int32 id = 1;
+}
+
+message FindPredecessorRequest {
+  int32 id = 1;
 }
 
 message Node {
