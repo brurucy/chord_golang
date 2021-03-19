@@ -242,7 +242,7 @@ var file_chord_proto_rawDesc = []byte{
 	0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
 	0x73, 0x73, 0x22, 0x24, 0x0a, 0x0c, 0x50, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
 	0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x6c, 0x69, 0x76, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x08, 0x52, 0x05, 0x61, 0x6c, 0x69, 0x76, 0x65, 0x32, 0xbb, 0x02, 0x0a, 0x05, 0x43, 0x68, 0x6f,
+	0x08, 0x52, 0x05, 0x61, 0x6c, 0x69, 0x76, 0x65, 0x32, 0xbc, 0x03, 0x0a, 0x05, 0x43, 0x68, 0x6f,
 	0x72, 0x64, 0x12, 0x32, 0x0a, 0x04, 0x50, 0x69, 0x6e, 0x67, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70,
 	0x74, 0x79, 0x1a, 0x10, 0x2e, 0x70, 0x62, 0x2e, 0x50, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70,
@@ -262,9 +262,17 @@ var file_chord_proto_rawDesc = []byte{
 	0x2e, 0x70, 0x62, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x22, 0x00, 0x12, 0x2a, 0x0a, 0x04, 0x4a, 0x6f,
 	0x69, 0x6e, 0x12, 0x08, 0x2e, 0x70, 0x62, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x1a, 0x16, 0x2e, 0x67,
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
-	0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x12, 0x5a, 0x10, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x5f,
-	0x62, 0x61, 0x63, 0x6b, 0x65, 0x6e, 0x64, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x3d, 0x0a, 0x09, 0x53, 0x74, 0x61, 0x62, 0x69, 0x6c,
+	0x69, 0x7a, 0x65, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d,
+	0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x40, 0x0a, 0x0c, 0x53, 0x74, 0x61, 0x62, 0x69, 0x6c, 0x69,
+	0x7a, 0x65, 0x41, 0x6c, 0x6c, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x12, 0x5a, 0x10, 0x63, 0x68, 0x6f, 0x72, 0x64,
+	0x5f, 0x62, 0x61, 0x63, 0x6b, 0x65, 0x6e, 0x64, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -294,14 +302,18 @@ var file_chord_proto_depIdxs = []int32{
 	0, // 3: pb.Chord.FindSuccessor:input_type -> pb.FindSuccessorRequest
 	1, // 4: pb.Chord.FindPredecessor:input_type -> pb.FindPredecessorRequest
 	2, // 5: pb.Chord.Join:input_type -> pb.Node
-	3, // 6: pb.Chord.Ping:output_type -> pb.PingResponse
-	4, // 7: pb.Chord.SetSucc:output_type -> google.protobuf.Empty
-	4, // 8: pb.Chord.SetSuccSucc:output_type -> google.protobuf.Empty
-	2, // 9: pb.Chord.FindSuccessor:output_type -> pb.Node
-	2, // 10: pb.Chord.FindPredecessor:output_type -> pb.Node
-	4, // 11: pb.Chord.Join:output_type -> google.protobuf.Empty
-	6, // [6:12] is the sub-list for method output_type
-	0, // [0:6] is the sub-list for method input_type
+	4, // 6: pb.Chord.Stabilize:input_type -> google.protobuf.Empty
+	4, // 7: pb.Chord.StabilizeAll:input_type -> google.protobuf.Empty
+	3, // 8: pb.Chord.Ping:output_type -> pb.PingResponse
+	4, // 9: pb.Chord.SetSucc:output_type -> google.protobuf.Empty
+	4, // 10: pb.Chord.SetSuccSucc:output_type -> google.protobuf.Empty
+	2, // 11: pb.Chord.FindSuccessor:output_type -> pb.Node
+	2, // 12: pb.Chord.FindPredecessor:output_type -> pb.Node
+	4, // 13: pb.Chord.Join:output_type -> google.protobuf.Empty
+	4, // 14: pb.Chord.Stabilize:output_type -> google.protobuf.Empty
+	4, // 15: pb.Chord.StabilizeAll:output_type -> google.protobuf.Empty
+	8, // [8:16] is the sub-list for method output_type
+	0, // [0:8] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -400,6 +412,8 @@ type ChordClient interface {
 	FindSuccessor(ctx context.Context, in *FindSuccessorRequest, opts ...grpc.CallOption) (*Node, error)
 	FindPredecessor(ctx context.Context, in *FindPredecessorRequest, opts ...grpc.CallOption) (*Node, error)
 	Join(ctx context.Context, in *Node, opts ...grpc.CallOption) (*empty.Empty, error)
+	Stabilize(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
+	StabilizeAll(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type chordClient struct {
@@ -464,6 +478,24 @@ func (c *chordClient) Join(ctx context.Context, in *Node, opts ...grpc.CallOptio
 	return out, nil
 }
 
+func (c *chordClient) Stabilize(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/pb.Chord/Stabilize", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chordClient) StabilizeAll(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/pb.Chord/StabilizeAll", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChordServer is the server API for Chord service.
 type ChordServer interface {
 	Ping(context.Context, *empty.Empty) (*PingResponse, error)
@@ -472,6 +504,8 @@ type ChordServer interface {
 	FindSuccessor(context.Context, *FindSuccessorRequest) (*Node, error)
 	FindPredecessor(context.Context, *FindPredecessorRequest) (*Node, error)
 	Join(context.Context, *Node) (*empty.Empty, error)
+	Stabilize(context.Context, *empty.Empty) (*empty.Empty, error)
+	StabilizeAll(context.Context, *empty.Empty) (*empty.Empty, error)
 }
 
 // UnimplementedChordServer can be embedded to have forward compatible implementations.
@@ -495,6 +529,12 @@ func (*UnimplementedChordServer) FindPredecessor(context.Context, *FindPredecess
 }
 func (*UnimplementedChordServer) Join(context.Context, *Node) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Join not implemented")
+}
+func (*UnimplementedChordServer) Stabilize(context.Context, *empty.Empty) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Stabilize not implemented")
+}
+func (*UnimplementedChordServer) StabilizeAll(context.Context, *empty.Empty) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StabilizeAll not implemented")
 }
 
 func RegisterChordServer(s *grpc.Server, srv ChordServer) {
@@ -609,6 +649,42 @@ func _Chord_Join_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Chord_Stabilize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).Stabilize(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.Chord/Stabilize",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).Stabilize(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Chord_StabilizeAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).StabilizeAll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.Chord/StabilizeAll",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).StabilizeAll(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Chord_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "pb.Chord",
 	HandlerType: (*ChordServer)(nil),
@@ -636,6 +712,14 @@ var _Chord_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Join",
 			Handler:    _Chord_Join_Handler,
+		},
+		{
+			MethodName: "Stabilize",
+			Handler:    _Chord_Stabilize_Handler,
+		},
+		{
+			MethodName: "StabilizeAll",
+			Handler:    _Chord_StabilizeAll_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

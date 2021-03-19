@@ -4,6 +4,7 @@ import (
 	"backend/pb"
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"log"
@@ -201,7 +202,7 @@ func TestFindSuccessorAndFindPredecessor(t *testing.T)  {
 
 }
 
-func TestJoin(t *testing.T) {
+func TestJoinStabilize(t *testing.T) {
 
 	done := make(chan bool)
 	var chordServers []*ChordServer
@@ -218,24 +219,39 @@ func TestJoin(t *testing.T) {
 		&ChordNode{Address: addr[i], Id: ids[i]}})
 		grpcServers = append(grpcServers, grpc.NewServer())
 		go runServer(grpcServers[i], chordServers[i], done)
-		fmt.Println(*chordServers[i].node)
 	}
 	for i := 0; i < n; i++ {
 		<-done
 	}
 
 	// First Server Node
+	fmt.Println("Inserting 5")
 	chordServers[0].SetSucc(context.Background(), &pb.Node{Id: chordServers[0].node.Id,
 		Address: chordServers[0].node.Address})
+	chordServers[0].SetSuccSucc(context.Background(), &pb.Node{Id: chordServers[0].node.Id,
+		Address: chordServers[0].node.Address})
+	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
 
+	// Nothing in it
 	fmt.Println(*chordServers[0].node, *chordServers[0].succ)
-
-	//fmt.Println(chordServers[0].FindSuccessor(context.Background(), &pb.FindSuccessorRequest{Id: chordServers[1].node.Id}))
-
+	fmt.Println("Inserting 92")
+	// Joining 92 on 5
 	chordServers[0].Join(context.Background(), &pb.Node{Id: chordServers[6].node.Id,
 		Address: chordServers[6].node.Address})
+	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
 
-	fmt.Println(*chordServers[0].node, *chordServers[0].succ)
+	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
+	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
+
+	fmt.Println("Inserting 17")
+	// Joining 17 on 92
+	chordServers[6].Join(context.Background(), &pb.Node{Id: chordServers[1].node.Id,
+		Address: chordServers[1].node.Address})
+	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
+
+	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
+	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
+	fmt.Println(*chordServers[1].node, *chordServers[1].succ, *chordServers[1].succSucc)
 
 	for _, val := range grpcServers{
 

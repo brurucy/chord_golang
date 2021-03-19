@@ -3,9 +3,9 @@ package src_rpc
 import (
 	"backend/pb"
 	"context"
+	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
-	"log"
 )
 
 type ChordNode struct{
@@ -36,7 +36,7 @@ func (s *ChordServer) SetSucc(ctx context.Context, node *pb.Node) (*empty.Empty,
 		Id:      node.Id,
 		Address: node.Address,
 	}
-	return nil,nil
+	return &empty.Empty{},nil
 }
 
 func (s *ChordServer) SetSuccSucc(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
@@ -44,39 +44,98 @@ func (s *ChordServer) SetSuccSucc(ctx context.Context, node *pb.Node) (*empty.Em
 		Id:      node.Id,
 		Address: node.Address,
 	}
-	return nil,nil
+	return &empty.Empty{},nil
+}
+
+func (s *ChordServer) Stabilize(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
+
+	// Fixing succ
+	//fmt.Println("Currently at", s.node.Id, " The Successor is: ", s.succ.Id)
+	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.node.Id + 1})
+	//fmt.Println("Getting succ", successor)
+	s.succ = &ChordNode{Id: successor.Id, Address: successor.Address}
+	// Fixing succ succ
+	successorSuccessor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.succ.Id + 1})
+	//fmt.Println("Getting succSucc", successorSuccessor)
+	s.succSucc = &ChordNode{Id: successorSuccessor.Id, Address: successorSuccessor.Address}
+	//fmt.Println("Currently at", s.node.Id, " The SuccSucc is: ", s.succSucc.Id)
+
+	return &empty.Empty{}, nil
+}
+
+func (s *ChordServer) StabilizeAll(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
+
+	startId := s.node.Id
+	// Pseudo do-while loop
+	//fmt.Println("Stabilizing")
+	_, err := s.Stabilize(ctx, e)
+	if err != nil {
+		fmt.Printf("Failed to Stabilize starting node: %v", err)
+		return &empty.Empty{}, err
+	}
+	//fmt.Println("Passed the stabilize call")
+	current := s.succ
+
+	for current.Id != startId {
+
+		fmt.Println("Currently at: ", current.Id)
+
+		conn, err := grpc.Dial(current.Address, grpc.WithInsecure())
+		if err != nil {
+			fmt.Printf("Failed to Dial %v", err)
+			return &empty.Empty{}, nil
+		}
+		c := pb.NewChordClient(conn)
+		_, err = c.Stabilize(ctx, e)
+		if err != nil {
+			fmt.Printf("Failed to Stabilize %v", err)
+			return &empty.Empty{}, nil
+		}
+		next, _ := c.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: current.Id + 1})
+
+		_ = conn.Close()
+
+		current = &ChordNode{Id: next.Id, Address: next.Address}
+	}
+
+	return &empty.Empty{}, nil
+
 }
 
 func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
 
 	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: node.Id})
-	log.Printf("Successor: %v", successor)
+	//log.Printf("Successor: %v", successor)
 	predecessor, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: node.Id})
-	log.Printf("Predecessor: %v", predecessor)
+	//log.Printf("Predecessor: %v", predecessor)
+	// Updating Successors
 	// Setting node's successor
 	conn, err := grpc.Dial(node.Address, grpc.WithInsecure())
 	if err != nil {
-		return nil, err
+		fmt.Println("Error accessing the predecessor's server")
+		return &empty.Empty{}, err
 	}
 	defer conn.Close()
 	c := pb.NewChordClient(conn)
 	_, err = c.SetSucc(ctx, successor)
 	if err != nil {
-		return nil, err
+		fmt.Println("Error setting the node's successor")
+		return &empty.Empty{}, err
 	}
-	// Setting node's predecessor
+	// Setting the node's predecessor successor
 	conn, err = grpc.Dial(predecessor.Address, grpc.WithInsecure())
 	if err != nil {
-		return nil, err
+		fmt.Println("Error accessing the predecessor's server")
+		return &empty.Empty{}, err
 	}
 	defer conn.Close()
 	c = pb.NewChordClient(conn)
 	_, err = c.SetSucc(ctx, node)
 	if err != nil {
-		return nil, err
+		fmt.Println("Error setting predecessor's successor")
+		return &empty.Empty{}, err
 	}
-
-	return nil, nil
+	return &empty.Empty{}, err
 }
 
 func (s *ChordServer) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.Node, error) {
@@ -88,9 +147,10 @@ func (s *ChordServer) FindSuccessor(ctx context.Context, request *pb.FindSuccess
 	// First Edge Case i.e seeking 4 from 92
 	} else if candidatePred < s.node.Id && s.node.Id > s.succ.Id && candidatePred < s.succ.Id {
 		return &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, nil
-	// Second Edge Case i.e seeking 94 from 92
+	// Second Edge Case i.e seeking 94 from 92, where 92 is the LAST node before the FIRST
 	} else if candidatePred > s.node.Id && s.node.Id > s.succ.Id {
 		return &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, nil
+	// Third Edge Case i.e, where a node equals its successor
 	} else if candidatePred > s.node.Id && s.succ.Id == s.node.Id {
 		return &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, nil
 	} else {
@@ -127,6 +187,7 @@ func (s *ChordServer) FindPredecessor(ctx context.Context, request *pb.FindPrede
 
 }
 
+// Node mutual recursion
 
 func (n *ChordNode) FindSuccessor(ctx context.Context, id int32) (*ChordNode, error) {
 	conn, err := grpc.Dial(n.Address, grpc.WithInsecure())

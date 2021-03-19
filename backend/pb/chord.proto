@@ -13,6 +13,8 @@ service Chord {
   rpc FindSuccessor(FindSuccessorRequest) returns (Node) {}
   rpc FindPredecessor(FindPredecessorRequest) returns (Node) {}
   rpc Join (Node) returns (google.protobuf.Empty) {}
+  rpc Stabilize (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc StabilizeAll (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
 message FindSuccessorRequest {
