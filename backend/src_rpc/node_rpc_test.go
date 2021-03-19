@@ -208,6 +208,8 @@ func TestJoinStabilize(t *testing.T) {
 	var chordServers []*ChordServer
 	var grpcServers [] *grpc.Server
 	ids := []int32{5, 17, 22, 56, 71, 89, 92}
+	min := int32(1)
+	max := int32(100)
 	var addr []string
 	addrBase := 10000
 	n := 7
@@ -226,6 +228,8 @@ func TestJoinStabilize(t *testing.T) {
 
 	// First Server Node
 	fmt.Println("Inserting 5")
+	chordServers[0].minSize = min
+	chordServers[0].maxSize = max
 	chordServers[0].SetSucc(context.Background(), &pb.Node{Id: chordServers[0].node.Id,
 		Address: chordServers[0].node.Address})
 	chordServers[0].SetSuccSucc(context.Background(), &pb.Node{Id: chordServers[0].node.Id,
@@ -236,6 +240,8 @@ func TestJoinStabilize(t *testing.T) {
 	fmt.Println(*chordServers[0].node, *chordServers[0].succ)
 	fmt.Println("Inserting 92")
 	// Joining 92 on 5
+	chordServers[6].minSize = min
+	chordServers[6].maxSize = max
 	chordServers[0].Join(context.Background(), &pb.Node{Id: chordServers[6].node.Id,
 		Address: chordServers[6].node.Address})
 	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
@@ -269,9 +275,16 @@ func TestJoinStabilize(t *testing.T) {
 	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
 
 	fmt.Println("Inserting 17")
-	// Joining 17 on 92
+	// Joining 17 on 92 and 56 on 5
+	chordServers[1].minSize = min
+	chordServers[1].maxSize = max
+	chordServers[3].minSize = min
+	chordServers[3].maxSize = max
+
 	chordServers[6].Join(context.Background(), &pb.Node{Id: chordServers[1].node.Id,
 		Address: chordServers[1].node.Address})
+	chordServers[0].Join(context.Background(), &pb.Node{Id: chordServers[3].node.Id,
+		Address: chordServers[3].node.Address})
 	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
 
 	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
@@ -296,9 +309,98 @@ func TestJoinStabilize(t *testing.T) {
 
 	}
 
-	if chordServers[0].succSucc.Id != 92 {
+	if chordServers[0].succSucc.Id != 56 {
 
 		t.Errorf("Failed setting succ succ of 5, 92")
+
+	}
+
+
+	for _, val := range grpcServers{
+
+		val.Stop()
+
+	}
+
+}
+
+func materializeAllNodes() ([]*ChordServer, [] *grpc.Server){
+
+	ctx := context.Background()
+
+	done := make(chan bool)
+	var chordServers []*ChordServer
+	var grpcServers [] *grpc.Server
+	ids := []int32{5, 56, 22, 17, 89, 71, 92}
+	min := int32(1)
+	max := int32(100)
+	addr := []string{"127.0.0.1:10000", "127.0.0.1:10001", "127.0.0.1:10002", "127.0.0.1:10003", "127.0.0.1:10004", "127.0.0.1:10005", "127.0.0.1:10006"}
+	n := 7
+	for i := 0; i < n; i++ {
+		chordServers = append(chordServers, &ChordServer{node:
+		&ChordNode{Address: addr[i], Id: ids[i]}})
+		grpcServers = append(grpcServers, grpc.NewServer())
+		go runServer(grpcServers[i], chordServers[i], done)
+		chordServers[i].minSize = min
+		chordServers[i].maxSize = max
+	}
+	for i := 0; i < n; i++ {
+		<-done
+	}
+	chordServers[0].SetSucc(ctx, &pb.Node{Id: chordServers[0].node.Id,
+		Address: chordServers[0].node.Address})
+	chordServers[0].SetSuccSucc(ctx, &pb.Node{Id: chordServers[0].node.Id,
+		Address: chordServers[0].node.Address})
+	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
+
+	for i := 1; i < n; i++ {
+		chordServers[0].Join(ctx, &pb.Node{Id: chordServers[i].node.Id, Address: chordServers[i].node.Address})
+		chordServers[0].StabilizeAll(ctx, &empty.Empty{})
+	}
+
+
+
+	return chordServers, grpcServers
+
+}
+
+func TestClosestNodeTo(t *testing.T) {
+
+	// Materializing non connected nodes
+	chordServers, grpcServers := materializeAllNodes()
+
+	ctx := context.Background()
+
+	for _, val := range chordServers {
+
+		fmt.Println("Node id:", val.node.Id, "Successor id:",val.succ.Id,"SuccSucc id:", val.succSucc.Id)
+
+	}
+
+	// What's the closest node, connected to 0, that would allow us to jump the closest to 18?, 17 or 22?
+	closestToTestBase, _ := chordServers[0].ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: 18})
+	closestToTestEdgeOne, _ := chordServers[0].ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: 16})
+	closestToTestEdgeTwo, _ := chordServers[6].ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: 4})
+	closestToTestEdgeThree, _ := chordServers[6].ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: 94})
+
+	if closestToTestBase.Id != 22 {
+
+		t.Errorf("ClosestNodeTo estimated wrong %v", closestToTestBase)
+
+	}
+	if closestToTestEdgeOne.Id != 17 {
+
+		t.Errorf("ClosestNodeTo estimated wrong %v", closestToTestEdgeOne)
+
+	}
+	if closestToTestEdgeTwo.Id != 5 {
+
+		t.Errorf("ClosestNodeTo estimated wrong %v", closestToTestEdgeTwo)
+
+	}
+	if closestToTestEdgeThree.Id != 5 {
+
+		t.Errorf("ClosestNodeTo estimated wrong %v", closestToTestEdgeThree)
 
 	}
 

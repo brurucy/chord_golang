@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"log"
 )
 
 type ChordNode struct{
@@ -17,6 +18,8 @@ type ChordServer struct {
 	node *ChordNode
 	succ *ChordNode
 	succSucc *ChordNode
+	minSize int32
+	maxSize int32
 }
 
 func (s *ChordServer) Ping(context.Context, *empty.Empty) (*pb.PingResponse, error) {
@@ -102,11 +105,10 @@ func (s *ChordServer) StabilizeAll(ctx context.Context, e *empty.Empty) (*empty.
 }
 
 func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
-
 	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: node.Id})
-	//log.Printf("Successor: %v", successor)
+	log.Printf("Successor: %v", successor)
 	predecessor, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: node.Id})
-	//log.Printf("Predecessor: %v", predecessor)
+	log.Printf("Predecessor: %v", predecessor)
 	// Updating Successors
 	// Setting node's successor
 	conn, err := grpc.Dial(node.Address, grpc.WithInsecure())
@@ -115,12 +117,15 @@ func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, er
 		return &empty.Empty{}, err
 	}
 	defer conn.Close()
+	fmt.Println("Here?")
 	c := pb.NewChordClient(conn)
 	_, err = c.SetSucc(ctx, successor)
+	fmt.Println("Here I guess")
 	if err != nil {
 		fmt.Println("Error setting the node's successor")
 		return &empty.Empty{}, err
 	}
+	fmt.Println("Or Here?")
 	// Setting the node's predecessor successor
 	conn, err = grpc.Dial(predecessor.Address, grpc.WithInsecure())
 	if err != nil {
@@ -128,17 +133,18 @@ func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, er
 		return &empty.Empty{}, err
 	}
 	defer conn.Close()
+	fmt.Println("Or here??")
 	c = pb.NewChordClient(conn)
 	_, err = c.SetSucc(ctx, node)
 	if err != nil {
 		fmt.Println("Error setting predecessor's successor")
 		return &empty.Empty{}, err
 	}
+
 	return &empty.Empty{}, err
 }
 
 func (s *ChordServer) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.Node, error) {
-
 	candidatePred := request.Id
 	// Base case i.e seeking 70 from 17
 	if candidatePred > s.node.Id && candidatePred < s.succ.Id {
@@ -214,4 +220,25 @@ func (n *ChordNode) FindPredecessor(ctx context.Context, id int32) (*ChordNode, 
 		return nil, err
 	}
 	return &ChordNode{r.Id, r.Address}, nil
+}
+
+// Closest Node To
+
+func (s *ChordServer) ClosestNodeTo(ctx context.Context, n *pb.ClosestNodeToRequest) (*pb.Node, error){
+
+	distanceFromSucc := RingDistance(s.succ.Id, n.Id, s.maxSize, s.minSize)
+	distanceFromSuccSucc := RingDistance(s.succSucc.Id, n.Id, s.maxSize, s.minSize)
+	var closestNode *ChordNode
+
+	if distanceFromSuccSucc > distanceFromSucc {
+		closestNode = s.succSucc
+	} else {
+		closestNode = s.succ
+	}
+
+	return &pb.Node{
+		Id:      closestNode.Id,
+		Address: closestNode.Address,
+	}, nil
+
 }

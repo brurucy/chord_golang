@@ -82,7 +82,7 @@ func Find(a []string, x string) int {
 func (n *Node) NextClosestHopTo(key int) *Node {
 
 	// we don't need to consider Succ because by this moment we know that SuccSucc doesn't have the value
-	// TODO: what if ring destabilizes and both Suc and SuccSucc don't have value
+	// TODO: what if ring destabilizes and both Suc and SuccSucc don't have value SOLUTION: commit harakiri
 	// while actually the key is between Succ and SuccSucc
 	succSuccDistance := RingDistance(n.SuccSucc.Id, key, n.Ring.MaxSize, n.Ring.MinSize)
 
