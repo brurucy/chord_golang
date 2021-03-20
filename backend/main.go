@@ -8,6 +8,7 @@ import (
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -49,7 +50,11 @@ func executor(in string) {
 
 				for _, val := range chordServers {
 
-					fmt.Println(val.Node.Id, val.Succ.Id, val.SuccSucc.Id)
+					sort.Slice(chordServers,  func(i, j int) bool {
+						return chordServers[i].Node.Id < chordServers[j].Node.Id
+					})
+
+					fmt.Println(val.Node.Id, val.Shortcuts, "S-",val.Succ.Id, "NS-", val.SuccSucc.Id)
 
 				}
 
@@ -85,15 +90,19 @@ func executor(in string) {
 							}
 						}
 
-						smallestId, err := strconv.ParseInt(keyStartNodes[0], 10,32)
+						keyId, err := strconv.ParseInt(keyStartNodes[0], 10,32)
 
-						if err != nil {
+						if int32(keyId) <= chordServers[0].Minsize || int32(keyId) > chordServers[0].Maxsize {
+
+							fmt.Println("Node is smaller or equal than minSize or bigger than maxSize ")
+
+						} else if err != nil {
 
 							fmt.Println("Lookup only takes integers, optionally spaced with the : delim")
 
 						} else {
 
-							lookupResponse, err := smallest.Lookup(context.Background(), &pb.LookupRequest{Id: int32(smallestId), Hops: 0})
+							lookupResponse, err := smallest.Lookup(context.Background(), &pb.LookupRequest{Id: int32(keyId), Hops: 0})
 
 							if err != nil {
 
@@ -112,7 +121,11 @@ func executor(in string) {
 
 						keyId, err := strconv.ParseInt(keyStartNodes[0], 10,32)
 
-						if err == nil {
+						if int32(keyId) <= chordServers[0].Minsize || int32(keyId) > chordServers[0].Maxsize {
+
+							fmt.Println("Node is smaller or equal than minSize or bigger than maxSize ")
+
+ 						} else if err == nil {
 
 							nodeId, err := strconv.ParseInt(keyStartNodes[1], 10, 32)
 
@@ -180,6 +193,10 @@ func executor(in string) {
 					if isNodeInTheAddressList == true {
 
 						fmt.Println("Node is already in the ring.")
+
+					} else if int32(keyId) <= chordServers[0].Minsize || int32(keyId) > chordServers[0].Maxsize {
+
+						fmt.Println("Node is smaller or equal than minSize or bigger than maxSize ")
 
 					} else {
 
