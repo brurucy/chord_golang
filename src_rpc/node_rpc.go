@@ -177,6 +177,10 @@ func (s *ChordServer) FindSuccessor(ctx context.Context, request *pb.FindSuccess
 
 		return &pb.Node{Id: s.Succ.Id, Address: s.Succ.Address}, nil
 
+	} else if s.Node.Id == s.Succ.Id && s.Node.Id == s.SuccSucc.Id {
+
+		return &pb.Node{Id: s.Succ.Id, Address: s.Succ.Address}, nil
+
 	} else {
 		node, err := s.Succ.FindSuccessor(ctx, request.Id)
 		if err != nil {
@@ -190,6 +194,10 @@ func (s *ChordServer) FindSuccessor(ctx context.Context, request *pb.FindSuccess
 func (s *ChordServer) FindPredecessor(ctx context.Context, request *pb.FindPredecessorRequest) (*pb.Node, error) {
 
 	if ShouldContainValue(s.Succ.Id, request.Id, s.Node.Id) {
+
+		return &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, nil
+
+	} else if s.Node.Id == s.Succ.Id && s.Node.Id == s.SuccSucc.Id {
 
 		return &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, nil
 
@@ -288,7 +296,6 @@ func (n *ChordNode) Lookup(ctx context.Context, id, hops int32) (*ChordNode, int
 
 func (s *ChordServer) HasValue(ctx context.Context, id int32) bool{
 
-	// Have to change this
 	pred, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{
 		Id: s.Node.Id,
 	})

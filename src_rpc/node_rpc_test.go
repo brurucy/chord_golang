@@ -714,33 +714,62 @@ func TestMurder(t *testing.T) {
 
 }
 
-func TestNPlusOneJoin(t *testing.T) {
+func TestWeirdCase(t *testing.T) {
 
-	chordServers, grpcServers := materializeAllNodes()
-	for _, val := range chordServers {
+	var chordServers []*ChordServer
+	var grpcServers []*grpc.Server
 
-		fmt.Println(val.Node.Id)
-
-	}
-
-	newNode := &ChordNode{
-		Id:      int32(4),
+	seventeen := &ChordNode{
+		Id:      int32(17),
 		Address: fmt.Sprintf("127.0.0.1:%v", 10100+len(chordServers)),
 	}
 
+	five := &ChordNode{
+		Id: int32(5),
+		Address: fmt.Sprintf("127.0.0.1:%v", 10101+len(chordServers)),
+	}
 
-	done := make(chan bool)
-	newChordServer := &ChordServer{Node: newNode}
-	newGrpcServer := grpc.NewServer()
-	go RunServer(newGrpcServer, newChordServer, done)
-	<-done
+	fixtysix := &ChordNode{
+		Id: int32(56),
+		Address: fmt.Sprintf("127.0.0.1:%v", 10102+len(chordServers)),
+	}
 
-	chordServers = append(chordServers, newChordServer)
-	grpcServers = append(grpcServers, newGrpcServer)
+	nodes := []*ChordNode{seventeen, five, fixtysix}
+
+	for _, vals := range nodes {
+
+		done := make(chan bool)
+		newChordServer := &ChordServer{Node: vals}
+		newGrpcServer := grpc.NewServer()
+		go RunServer(newGrpcServer, newChordServer, done)
+		<-done
+		chordServers = append(chordServers, newChordServer)
+		grpcServers = append(grpcServers, newGrpcServer)
+
+	}
 
 	ctx := context.Background()
 
-	fmt.Println(chordServers[0].HasValue(ctx, 92))
+	chordServers[0].Succ = chordServers[0].Node
+	chordServers[0].SuccSucc = chordServers[0].Node
+
+	//successor, _ := chordServers[0].FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: 5})
+
+	chordServers[0].Join(ctx, &pb.Node{Id: chordServers[1].Node.Id, Address: chordServers[1].Node.Address})
+
+
+	fmt.Println("Does it join?")
+	fmt.Println(chordServers[0].Node.Id, chordServers[0].Succ.Id, chordServers[0].SuccSucc.Id)
+
+	chordServers[1].StabilizeAll(ctx, &empty.Empty{})
+
+	for _, vals := range chordServers {
+
+		fmt.Println(vals.Node.Id)
+		fmt.Println(vals.Succ.Id)
+		fmt.Println(vals.SuccSucc.Id)
+
+	}
 
 	/*
 
@@ -769,11 +798,5 @@ func TestNPlusOneJoin(t *testing.T) {
 		val.Stop()
 
 	}
-
-}
-
-func TestLookupStartPredecessor(t *testing.T) {
-
-
 
 }
