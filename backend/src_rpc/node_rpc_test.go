@@ -372,6 +372,7 @@ func materializeAllNodes() ([]*ChordServer, [] *grpc.Server){
 		go runServer(grpcServers[i], chordServers[i], done)
 		chordServers[i].minSize = min
 		chordServers[i].maxSize = max
+		chordServers[i].shortcuts = make([]*ChordNode, 0)
 	}
 	for i := 0; i < n; i++ {
 		<-done
@@ -387,11 +388,18 @@ func materializeAllNodes() ([]*ChordServer, [] *grpc.Server){
 		chordServers[0].StabilizeAll(ctx, &empty.Empty{})
 	}
 
-
+	chordServers[0].AddShortcut(ctx, &pb.Node{Id: 56,
+		Address: "127.0.0.1:10001"})
+	chordServers[0].AddShortcut(ctx, &pb.Node{Id: 71,
+		Address: "127.0.0.1:10005"})
+	chordServers[2].AddShortcut(ctx, &pb.Node{Id: 89,
+		Address: "127.0.0.1:10004"})
 
 	return chordServers, grpcServers
 
 }
+
+/*
 
 func TestClosestNodeTo(t *testing.T) {
 
@@ -399,15 +407,6 @@ func TestClosestNodeTo(t *testing.T) {
 	chordServers, grpcServers := materializeAllNodes()
 
 	ctx := context.Background()
-
-	/*
-	for _, val := range chordServers {
-
-		fmt.Println("Node id:", val.node.Id, "Successor id:",val.succ.Id,"SuccSucc id:", val.succSucc.Id)
-
-	}
-
-	 */
 
 	// What's the closest node, connected to 0, that would allow us to jump the closest to 18?, 17 or 22?
 	closestToTestBase, _ := chordServers[0].ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: 18})
@@ -444,6 +443,7 @@ func TestClosestNodeTo(t *testing.T) {
 	}
 
 }
+ */
 
 func TestShouldContainValue(t *testing.T) {
 	// Based on the ring 5, 17, 22, 56, 71, 89, 92, 5
@@ -472,12 +472,248 @@ func TestLookup(t *testing.T) {
 
 	ctx := context.Background()
 
-	lookupOne, _ := chordServers[0].Lookup(ctx, &pb.LookupRequest{Id: 101})
+	lookupOne, _ := chordServers[0].Lookup(ctx, &pb.LookupRequest{Id: 101, Hops: 0})
+	lookupTwo, _ := chordServers[1].Lookup(ctx, &pb.LookupRequest{Id: 4, Hops: 0})
+	fmt.Println("Is it stopping here?")
+	lookupThree, _ := chordServers[2].Lookup(ctx, &pb.LookupRequest{Id: 95, Hops: 0})
+	fmt.Println("Or not?")
+	lookupFour, _ := chordServers[3].Lookup(ctx, &pb.LookupRequest{Id: 32, Hops: 0})
+	lookupFive, _ := chordServers[4].Lookup(ctx, &pb.LookupRequest{Id: 1, Hops: 0})
+	lookupSix, _ := chordServers[5].Lookup(ctx, &pb.LookupRequest{Id: -1, Hops: 0})
+	lookupSeven, _ := chordServers[6].Lookup(ctx, &pb.LookupRequest{Id: 16, Hops: 0})
+	lookupEight, _ := chordServers[3].Lookup(ctx, &pb.LookupRequest{Id: 56, Hops: 0})
+
+	// Testing Lookups
 
 	if lookupOne != nil {
 		t.Errorf("panik")
 	}
+	if lookupTwo.Node.Id != 5 {
+		t.Errorf("panik")
+	}
+	if lookupThree.Node.Id != 5 {
+		t.Errorf("panik")
+	}
+	if lookupFour.Node.Id != 56 {
+		t.Errorf("panik")
+	}
+	if lookupFive.Node.Id != 5 {
+		t.Errorf("panik")
+	}
+	if lookupSix != nil {
+		t.Errorf("panik")
+	}
+	if lookupSeven.Node.Id != 17 {
+		t.Errorf("panik")
+	}
+	if lookupEight.Node.Id != 56 {
+		t.Errorf("panik")
+	}
 
+	// Testing Distances
+
+	//fmt.Println(lookupOne.Hops)
+	fmt.Println(lookupTwo.Hops)
+
+	fmt.Println(lookupThree.Hops)
+
+	fmt.Println(lookupFour.Hops)
+
+	fmt.Println(lookupFive.Hops)
+	//fmt.Println(lookupSix.Hops)
+	fmt.Println(lookupSeven.Hops)
+	fmt.Println(lookupEight.Hops)
+
+
+	//if lookupOne != nil {
+	//	t.Errorf("panik")
+	//}
+	//// 17 -> 4, 17->22->56->89->92
+	//if lookupTwo.Hops != 5 {
+	//	t.Errorf("panik")
+	//}
+	//if lookupThree.Hops != 5 {
+	//	t.Errorf("panik")
+	//}
+	//if lookupFour.Hops != 56 {
+	//	t.Errorf("panik")
+	//}
+	//if lookupFive.Hops != 5 {
+	//	t.Errorf("panik")
+	//}
+	//if lookupSix != nil {
+	//	t.Errorf("panik")
+	//}
+	//if lookupSeven.Hops != 17 {
+	//	t.Errorf("panik")
+	//}
+	//if lookupEight.Hops != 56 {
+	//	t.Errorf("panik")
+	//}
+
+
+
+	for _, val := range grpcServers{
+
+		val.Stop()
+
+	}
+
+}
+
+func TestLookupOnce(t *testing.T) {
+
+	chordServers, grpcServers := materializeAllNodes()
+
+	ctx := context.Background()
+
+	for _, vals := range chordServers{
+
+		fmt.Println(*vals.node, *vals.succ, *vals.succSucc)
+
+	}
+
+	lookupOne, _ := chordServers[0].Lookup(ctx, &pb.LookupRequest{Id: 87, Hops: 0})
+
+	fmt.Println(lookupOne)
+
+	for _, val := range grpcServers{
+
+		val.Stop()
+
+	}
+
+}
+
+func TestPinging(t *testing.T)  {
+
+	chordServers, grpcServers := materializeAllNodes()
+
+	ctx := context.Background()
+
+	conn, err := grpc.Dial(chordServers[0].node.Address, grpc.WithInsecure())
+
+	if err != nil{
+
+		t.Error("Panik")
+
+	}
+
+	c := pb.NewChordClient(conn)
+
+	fmt.Println(c.Ping(ctx, &empty.Empty{}))
+
+	_ = conn.Close()
+
+	// Fake address
+
+	conn, err = grpc.Dial("127.0.0.1:20000", grpc.WithInsecure())
+
+	if err != nil{
+
+		t.Error("Panik")
+
+	}
+
+	c = pb.NewChordClient(conn)
+
+	ping, err := c.Ping(ctx, &empty.Empty{})
+
+	if ping == nil {
+
+		fmt.Println("I'm right")
+
+	}
+
+	_ = conn.Close()
+
+	for _, val := range grpcServers{
+
+		val.Stop()
+
+	}
+
+}
+
+func TestMurder(t *testing.T) {
+
+	chordServers, grpcServers := materializeAllNodes()
+	fmt.Println("First Loop")
+	for _, val := range chordServers {
+
+		fmt.Println(val.node.Id)
+
+	}
+
+	ctx := context.Background()
+
+	fmt.Println("22 Shortcuts:", chordServers[2].shortcuts)
+
+	chordServers[4].Leave(ctx, &empty.Empty{})
+	grpcServers[4].Stop()
+	chordServers[0].StabilizeAll(ctx, &empty.Empty{})
+
+	fmt.Println("22 Shortcuts:", chordServers[2].shortcuts)
+
+	fmt.Println("5 Shortcuts:", chordServers[0].shortcuts)
+
+	chordServers[1].Leave(ctx, &empty.Empty{})
+	grpcServers[1].Stop()
+	chordServers[0].StabilizeAll(ctx, &empty.Empty{})
+
+	fmt.Println("5 Shortcuts:", chordServers[0].shortcuts)
+
+	chordServers[5].Leave(ctx, &empty.Empty{})
+	grpcServers[5].Stop()
+	chordServers[0].StabilizeAll(ctx, &empty.Empty{})
+
+	fmt.Println("5 Shortcuts:", chordServers[0].shortcuts)
+	fmt.Println("Last Loop")
+	for _, val := range chordServers {
+
+		fmt.Println(val.node.Id)
+
+	}
+
+	for idx, val := range chordServers {
+
+		conn, _ := grpc.Dial(val.node.Address, grpc.WithInsecure())
+
+		c := pb.NewChordClient(conn)
+
+		ping, _ := c.Ping(ctx, &empty.Empty{})
+
+		fmt.Println("Pinging", val.node.Id, "at",val.node.Address)
+
+		_ = conn.Close()
+
+		if ping == nil {
+
+			fmt.Println("Nil", val.node.Id)
+
+			chordServers[idx] = nil
+			grpcServers[idx] = nil
+
+		}
+
+	}
+
+	n := 0
+	for idx, x := range chordServers {
+		if x != nil {
+			chordServers[n] = x
+			grpcServers[n] = grpcServers[idx]
+			n++
+		}
+	}
+	chordServers = chordServers[:n]
+	grpcServers = grpcServers[:n]
+
+	for _, val := range chordServers {
+
+		fmt.Println(val.node.Id)
+
+	}
 
 
 	for _, val := range grpcServers{

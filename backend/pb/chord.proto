@@ -16,11 +16,20 @@ service Chord {
   rpc Stabilize (google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc StabilizeAll (google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc ClosestNodeTo (ClosestNodeToRequest) returns (Node) {}
-  rpc Lookup (LookupRequest) returns (Node) {}
+  rpc AddShortcut (Node) returns (google.protobuf.Empty) {}
+  rpc Lookup (LookupRequest) returns (LookupResponse) {}
+  rpc Leave (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
 }
 
 message LookupRequest {
   int32 id = 1;
+  int32 hops = 2;
+}
+
+message LookupResponse {
+  Node node = 1;
+  int32 hops = 2;
 }
 
 message FindSuccessorRequest {
