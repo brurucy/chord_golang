@@ -1,4 +1,4 @@
-module backend
+module chord_golang
 
 go 1.15
 

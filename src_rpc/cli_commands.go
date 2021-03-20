@@ -1,7 +1,7 @@
 package src_rpc
 
 import (
-	"backend/pb"
+	"chord_golang/pb"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"context"

@@ -1,7 +1,7 @@
 package src_rpc
 
 import (
-	"backend/pb"
+	"chord_golang/pb"
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -524,35 +524,6 @@ func TestLookup(t *testing.T) {
 	fmt.Println(lookupSeven.Hops)
 	fmt.Println(lookupEight.Hops)
 
-
-	//if lookupOne != nil {
-	//	t.Errorf("panik")
-	//}
-	//// 17 -> 4, 17->22->56->89->92
-	//if lookupTwo.Hops != 5 {
-	//	t.Errorf("panik")
-	//}
-	//if lookupThree.Hops != 5 {
-	//	t.Errorf("panik")
-	//}
-	//if lookupFour.Hops != 56 {
-	//	t.Errorf("panik")
-	//}
-	//if lookupFive.Hops != 5 {
-	//	t.Errorf("panik")
-	//}
-	//if lookupSix != nil {
-	//	t.Errorf("panik")
-	//}
-	//if lookupSeven.Hops != 17 {
-	//	t.Errorf("panik")
-	//}
-	//if lookupEight.Hops != 56 {
-	//	t.Errorf("panik")
-	//}
-
-
-
 	for _, val := range grpcServers{
 
 		val.Stop()
@@ -740,5 +711,63 @@ func TestMurder(t *testing.T) {
 		val.Stop()
 
 	}
+
+}
+
+func TestNPlusOneJoin(t *testing.T) {
+
+	chordServers, grpcServers := materializeAllNodes()
+	for _, val := range chordServers {
+
+		fmt.Println(val.Node.Id)
+
+	}
+
+	newNode := &ChordNode{
+		Id:      int32(4),
+		Address: fmt.Sprintf("127.0.0.1:%v", 10100+len(chordServers)),
+	}
+
+
+	done := make(chan bool)
+	newChordServer := &ChordServer{Node: newNode}
+	newGrpcServer := grpc.NewServer()
+	go RunServer(newGrpcServer, newChordServer, done)
+	<-done
+
+	chordServers = append(chordServers, newChordServer)
+	grpcServers = append(grpcServers, newGrpcServer)
+
+	ctx := context.Background()
+
+	chordServers[0].Join(ctx, &pb.Node{Id: chordServers[len(chordServers) - 1].Node.Id, Address: chordServers[len(chordServers) - 1].Node.Address})
+	fmt.Println("Does it join?")
+
+	for _, val := range chordServers{
+
+		fmt.Println(val.Node.Id, "S-",val.Succ.Id, "NS-", val.SuccSucc.Id)
+
+	}
+
+	chordServers[0].StabilizeAll(ctx, &empty.Empty{})
+	fmt.Println("After stabilize")
+
+	for _, val := range chordServers{
+
+		fmt.Println(val.Node.Id, "S-",val.Succ.Id, "NS-", val.SuccSucc.Id)
+
+	}
+
+	for _, val := range grpcServers{
+
+		val.Stop()
+
+	}
+
+}
+
+func TestLookupStartPredecessor(t *testing.T) {
+
+
 
 }

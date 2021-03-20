@@ -1,8 +1,8 @@
 package main
 
 import (
-	"backend/pb"
-	"backend/src_rpc"
+	"chord_golang/pb"
+	"chord_golang/src_rpc"
 	"context"
 	"fmt"
 	prompt "github.com/c-bata/go-prompt"
@@ -311,13 +311,11 @@ func executor(in string) {
 
 								ping, _ := c.Ping(context.Background(), &empty.Empty{})
 
-								fmt.Println("Pinging", val.Node.Id, "at",val.Node.Address)
+								//fmt.Println("Pinging", val.Node.Id, "at",val.Node.Address)
 
 								_ = conn.Close()
 
 								if ping == nil {
-
-									fmt.Println("Nil", val.Node.Id)
 
 									chordServers[idx] = nil
 									grpcServers[idx] = nil

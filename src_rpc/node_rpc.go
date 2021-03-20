@@ -1,7 +1,7 @@
 package src_rpc
 
 import (
-	"backend/pb"
+	"chord_golang/pb"
 	"context"
 	"errors"
 	"fmt"
@@ -94,8 +94,6 @@ func (s *ChordServer) Stabilize(ctx context.Context, e *empty.Empty) (*empty.Emp
 func (s *ChordServer) StabilizeAll(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
 
 	startId := s.Node.Id
-	// Pseudo do-while loop
-	//fmt.Println("Stabilizing")
 	_, err := s.Stabilize(ctx, e)
 	if err != nil {
 		fmt.Printf("Failed to Stabilize starting node: %v", err)
@@ -141,11 +139,8 @@ func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, er
 	}
 
 	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: node.Id})
-	//log.Printf("Successor: %v", successor)
 	predecessor, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: node.Id})
-	//log.Printf("Predecessor: %v", predecessor)
-	// Updating Successors
-	// Setting node's successor
+
 	conn, err := grpc.Dial(node.Address, grpc.WithInsecure())
 	if err != nil {
 		fmt.Println("Error accessing the predecessor's server")
@@ -278,9 +273,6 @@ func (s *ChordServer) ClosestNodeTo(ctx context.Context, n *pb.ClosestNodeToRequ
 }
 
 func (n *ChordNode) Lookup(ctx context.Context, id, hops int32) (*ChordNode, int32, error) {
-	fmt.Println("Called once", hops, "at", n.Id)
-	//hops = hops + 2
-	fmt.Println("New hops", hops)
 	conn, err := grpc.Dial(n.Address, grpc.WithInsecure())
 	if err != nil {
 		return nil, hops, err
@@ -296,10 +288,6 @@ func (n *ChordNode) Lookup(ctx context.Context, id, hops int32) (*ChordNode, int
 
 
 func (s *ChordServer) Lookup(ctx context.Context, request *pb.LookupRequest) (*pb.LookupResponse, error) {
-
-	//pred, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: s.Node.Id})
-
-	//fmt.Println(pred)
 
 	if s.Node.Id == request.Id {
 
