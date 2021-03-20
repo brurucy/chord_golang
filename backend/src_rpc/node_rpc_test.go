@@ -13,7 +13,7 @@ import (
 )
 
 func runServer(s *grpc.Server, server *ChordServer, done chan bool) {
-	lis, err := net.Listen("tcp", server.node.Address)
+	lis, err := net.Listen("tcp", server.Node.Address)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -33,19 +33,19 @@ func TestNodePing(t *testing.T) {
 	fake_address := "127.0.0.1:10003"
 
 	//First Node
-	node_one := ChordNode{Id: 1,
+	Node_one := ChordNode{Id: 1,
 					    Address: address_one}
 	first_server := grpc.NewServer()
 
 	//Second Node
-	first_chord := ChordServer{node: &node_one}
+	first_chord := ChordServer{Node: &Node_one}
 
-	node_two := ChordNode{Id: 2,
+	Node_two := ChordNode{Id: 2,
 						  Address: address_two}
 
 	//Servers
 	second_server := grpc.NewServer()
-	second_chord := ChordServer{node: &node_two}
+	second_chord := ChordServer{Node: &Node_two}
 
 	go runServer(first_server, &first_chord, done)
 	go runServer(second_server, &second_chord, done)
@@ -53,12 +53,12 @@ func TestNodePing(t *testing.T) {
 	<-done
 	<-done
 
-	// Pinging first node
+	// Pinging first Node
 
-	conn, err := grpc.Dial(node_one.Address, grpc.WithInsecure())
+	conn, err := grpc.Dial(Node_one.Address, grpc.WithInsecure())
 
 	if err != nil {
-		log.Printf("Could not contact node %v", err)
+		log.Printf("Could not contact Node %v", err)
 	}
 
 	client := pb.NewChordClient(conn)
@@ -68,12 +68,12 @@ func TestNodePing(t *testing.T) {
 		t.Fatalf("should have succeded %v", resp)
 	}
 	_ = conn.Close()
-	// Pinging second node
+	// Pinging second Node
 
-	conn, err = grpc.Dial(node_two.Address, grpc.WithInsecure())
+	conn, err = grpc.Dial(Node_two.Address, grpc.WithInsecure())
 
 	if err != nil {
-		log.Printf("Could not contact node %v", err)
+		log.Printf("Could not contact Node %v", err)
 	}
 
 	client = pb.NewChordClient(conn)
@@ -87,7 +87,7 @@ func TestNodePing(t *testing.T) {
 
 	conn, err = grpc.Dial(fake_address, grpc.WithInsecure())
 	if err != nil {
-		log.Printf("Could not contact node %v", err)
+		log.Printf("Could not contact Node %v", err)
 	}
 	client = pb.NewChordClient(conn)
 
@@ -116,11 +116,11 @@ func TestFindSuccessorAndFindPredecessor(t *testing.T)  {
 		addr = append(addr, fmt.Sprintf("127.0.0.1:%v", i+addrBase))
 	}
 	for i := 0; i < n; i++ {
-		chordServers = append(chordServers, &ChordServer{node:
+		chordServers = append(chordServers, &ChordServer{Node:
 			&ChordNode{Address: addr[i], Id: ids[i]}})
 		grpcServers = append(grpcServers, grpc.NewServer())
 		go runServer(grpcServers[i], chordServers[i], done)
-		//fmt.Println(*chordServers[i].node)
+		//fmt.Println(*chordServers[i].Node)
 	}
 	for i := 0; i < n; i++ {
 		<-done
@@ -131,11 +131,11 @@ func TestFindSuccessorAndFindPredecessor(t *testing.T)  {
 
 		if idx < len(chordServers)-1 {
 
-			vals.SetSucc(context.Background(), &pb.Node{Id: chordServers[idx+1].node.Id,
-				Address: chordServers[idx+1].node.Address})
+			vals.SetSucc(context.Background(), &pb.Node{Id: chordServers[idx+1].Node.Id,
+				Address: chordServers[idx+1].Node.Address})
 		} else {
-			vals.SetSucc(context.Background(), &pb.Node{Id: chordServers[0].node.Id,
-				Address: chordServers[0].node.Address})
+			vals.SetSucc(context.Background(), &pb.Node{Id: chordServers[0].Node.Id,
+				Address: chordServers[0].Node.Address})
 		}
 
 	}
@@ -144,7 +144,7 @@ func TestFindSuccessorAndFindPredecessor(t *testing.T)  {
 
 	for _, vals := range chordServers {
 
-		fmt.Println(*vals.node, *vals.succ, *vals.succSucc)
+		fmt.Println(*vals.Node, *vals.Succ, *vals.SuccSucc)
 
 	}
 
@@ -225,7 +225,7 @@ func TestJoinStabilize(t *testing.T) {
 		addr = append(addr, fmt.Sprintf("127.0.0.1:%v", i+addrBase))
 	}
 	for i := 0; i < n; i++ {
-		chordServers = append(chordServers, &ChordServer{node:
+		chordServers = append(chordServers, &ChordServer{Node:
 		&ChordNode{Address: addr[i], Id: ids[i]}})
 		grpcServers = append(grpcServers, grpc.NewServer())
 		go runServer(grpcServers[i], chordServers[i], done)
@@ -236,77 +236,77 @@ func TestJoinStabilize(t *testing.T) {
 
 	// First Server Node
 	fmt.Println("Inserting 5")
-	chordServers[0].minSize = min
-	chordServers[0].maxSize = max
-	chordServers[0].SetSucc(context.Background(), &pb.Node{Id: chordServers[0].node.Id,
-		Address: chordServers[0].node.Address})
-	chordServers[0].SetSuccSucc(context.Background(), &pb.Node{Id: chordServers[0].node.Id,
-		Address: chordServers[0].node.Address})
+	chordServers[0].Minsize = min
+	chordServers[0].Maxsize = max
+	chordServers[0].SetSucc(context.Background(), &pb.Node{Id: chordServers[0].Node.Id,
+		Address: chordServers[0].Node.Address})
+	chordServers[0].SetSuccSucc(context.Background(), &pb.Node{Id: chordServers[0].Node.Id,
+		Address: chordServers[0].Node.Address})
 	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
 
 	// Nothing in it
-	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
+	fmt.Println(*chordServers[0].Node, *chordServers[0].Succ, *chordServers[0].SuccSucc)
 	fmt.Println("Inserting 92")
 	// Joining 92 on 5
-	chordServers[6].minSize = min
-	chordServers[6].maxSize = max
-	chordServers[0].Join(context.Background(), &pb.Node{Id: chordServers[6].node.Id,
-		Address: chordServers[6].node.Address})
+	chordServers[6].Minsize = min
+	chordServers[6].Maxsize = max
+	chordServers[0].Join(context.Background(), &pb.Node{Id: chordServers[6].Node.Id,
+		Address: chordServers[6].Node.Address})
 	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
 
-	if chordServers[6].succ.Id != 5 {
+	if chordServers[6].Succ.Id != 5 {
 
 		t.Errorf("Failed setting succ of 92, 5")
 
 	}
 
-	if chordServers[6].succSucc.Id != chordServers[6].node.Id {
+	if chordServers[6].SuccSucc.Id != chordServers[6].Node.Id {
 
 		t.Errorf("Failed setting succ succ of 92, 92")
 
 	}
 
-	if chordServers[0].succ.Id != 92 {
+	if chordServers[0].Succ.Id != 92 {
 
 		t.Errorf("Failed setting succ of 5, 92")
 
 	}
 
-	if chordServers[0].succSucc.Id != chordServers[0].node.Id {
+	if chordServers[0].SuccSucc.Id != chordServers[0].Node.Id {
 
 		t.Errorf("Failed setting succ succ of 5, 5")
 
 	}
 
 
-	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
-	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
+	fmt.Println(*chordServers[6].Node, *chordServers[6].Succ, *chordServers[6].SuccSucc)
+	fmt.Println(*chordServers[0].Node, *chordServers[0].Succ, *chordServers[0].SuccSucc)
 
 	fmt.Println("Inserting 17 and 56")
 	// Joining 17 on 92 and 56 on 5
-	chordServers[1].minSize = min
-	chordServers[1].maxSize = max
-	chordServers[3].minSize = min
-	chordServers[3].maxSize = max
+	chordServers[1].Minsize = min
+	chordServers[1].Maxsize = max
+	chordServers[3].Minsize = min
+	chordServers[3].Maxsize = max
 
-	chordServers[6].Join(context.Background(), &pb.Node{Id: chordServers[1].node.Id,
-		Address: chordServers[1].node.Address})
+	chordServers[6].Join(context.Background(), &pb.Node{Id: chordServers[1].Node.Id,
+		Address: chordServers[1].Node.Address})
 
 	fmt.Println("Before stabilize")
-	fmt.Println(*chordServers[0].node, *chordServers[0].succ)
-	fmt.Println(*chordServers[1].node, *chordServers[1].succ)
-	fmt.Println(*chordServers[6].node, *chordServers[6].succ)
+	fmt.Println(*chordServers[0].Node, *chordServers[0].Succ)
+	fmt.Println(*chordServers[1].Node, *chordServers[1].Succ)
+	fmt.Println(*chordServers[6].Node, *chordServers[6].Succ)
 	fmt.Println("----")
 
 	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
 	fmt.Println("After stabilize")
-	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
-	fmt.Println(*chordServers[1].node, *chordServers[1].succ, *chordServers[1].succSucc)
-	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
+	fmt.Println(*chordServers[0].Node, *chordServers[0].Succ, *chordServers[0].SuccSucc)
+	fmt.Println(*chordServers[1].Node, *chordServers[1].Succ, *chordServers[1].SuccSucc)
+	fmt.Println(*chordServers[6].Node, *chordServers[6].Succ, *chordServers[6].SuccSucc)
 	fmt.Println("----")
 
-	chordServers[0].Join(context.Background(), &pb.Node{Id: chordServers[3].node.Id,
-		Address: chordServers[3].node.Address})
+	chordServers[0].Join(context.Background(), &pb.Node{Id: chordServers[3].Node.Id,
+		Address: chordServers[3].Node.Address})
 
 	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
 
@@ -315,30 +315,30 @@ func TestJoinStabilize(t *testing.T) {
 	//17->56-92
 	//56->92->5
 
-	fmt.Println(*chordServers[0].node, *chordServers[0].succ, *chordServers[0].succSucc)
-	fmt.Println(*chordServers[1].node, *chordServers[1].succ, *chordServers[1].succSucc)
-	fmt.Println(*chordServers[3].node, *chordServers[3].succ, *chordServers[3].succSucc)
-	fmt.Println(*chordServers[6].node, *chordServers[6].succ, *chordServers[6].succSucc)
+	fmt.Println(*chordServers[0].Node, *chordServers[0].Succ, *chordServers[0].SuccSucc)
+	fmt.Println(*chordServers[1].Node, *chordServers[1].Succ, *chordServers[1].SuccSucc)
+	fmt.Println(*chordServers[3].Node, *chordServers[3].Succ, *chordServers[3].SuccSucc)
+	fmt.Println(*chordServers[6].Node, *chordServers[6].Succ, *chordServers[6].SuccSucc)
 
-	if chordServers[6].succ.Id != 5 {
+	if chordServers[6].Succ.Id != 5 {
 
 		t.Errorf("Failed setting succ of 92, 5")
 
 	}
 
-	if chordServers[6].succSucc.Id != 17 {
+	if chordServers[6].SuccSucc.Id != 17 {
 
 		t.Errorf("Failed setting succ succ of 92, 17")
 
 	}
 
-	if chordServers[0].succ.Id != 17 {
+	if chordServers[0].Succ.Id != 17 {
 
 		t.Errorf("Failed setting succ of 5, 17")
 
 	}
 
-	if chordServers[0].succSucc.Id != 56 {
+	if chordServers[0].SuccSucc.Id != 56 {
 
 		t.Errorf("Failed setting succ succ of 5, 92")
 
@@ -366,25 +366,25 @@ func materializeAllNodes() ([]*ChordServer, [] *grpc.Server){
 	addr := []string{"127.0.0.1:10000", "127.0.0.1:10001", "127.0.0.1:10002", "127.0.0.1:10003", "127.0.0.1:10004", "127.0.0.1:10005", "127.0.0.1:10006"}
 	n := 7
 	for i := 0; i < n; i++ {
-		chordServers = append(chordServers, &ChordServer{node:
+		chordServers = append(chordServers, &ChordServer{Node:
 		&ChordNode{Address: addr[i], Id: ids[i]}})
 		grpcServers = append(grpcServers, grpc.NewServer())
 		go runServer(grpcServers[i], chordServers[i], done)
-		chordServers[i].minSize = min
-		chordServers[i].maxSize = max
-		chordServers[i].shortcuts = make([]*ChordNode, 0)
+		chordServers[i].Minsize = min
+		chordServers[i].Maxsize = max
+		chordServers[i].Shortcuts = make([]*ChordNode, 0)
 	}
 	for i := 0; i < n; i++ {
 		<-done
 	}
-	chordServers[0].SetSucc(ctx, &pb.Node{Id: chordServers[0].node.Id,
-		Address: chordServers[0].node.Address})
-	chordServers[0].SetSuccSucc(ctx, &pb.Node{Id: chordServers[0].node.Id,
-		Address: chordServers[0].node.Address})
+	chordServers[0].SetSucc(ctx, &pb.Node{Id: chordServers[0].Node.Id,
+		Address: chordServers[0].Node.Address})
+	chordServers[0].SetSuccSucc(ctx, &pb.Node{Id: chordServers[0].Node.Id,
+		Address: chordServers[0].Node.Address})
 	chordServers[0].StabilizeAll(context.Background(), &empty.Empty{})
 
 	for i := 1; i < n; i++ {
-		chordServers[0].Join(ctx, &pb.Node{Id: chordServers[i].node.Id, Address: chordServers[i].node.Address})
+		chordServers[0].Join(ctx, &pb.Node{Id: chordServers[i].Node.Id, Address: chordServers[i].Node.Address})
 		chordServers[0].StabilizeAll(ctx, &empty.Empty{})
 	}
 
@@ -403,12 +403,12 @@ func materializeAllNodes() ([]*ChordServer, [] *grpc.Server){
 
 func TestClosestNodeTo(t *testing.T) {
 
-	// Materializing non connected nodes
+	// Materializing non connected Nodes
 	chordServers, grpcServers := materializeAllNodes()
 
 	ctx := context.Background()
 
-	// What's the closest node, connected to 0, that would allow us to jump the closest to 18?, 17 or 22?
+	// What's the closest Node, connected to 0, that would allow us to jump the closest to 18?, 17 or 22?
 	closestToTestBase, _ := chordServers[0].ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: 18})
 	closestToTestEdgeOne, _ := chordServers[0].ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: 16})
 	closestToTestEdgeTwo, _ := chordServers[6].ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: 4})
@@ -431,7 +431,7 @@ func TestClosestNodeTo(t *testing.T) {
 	}
 	if closestToTestEdgeThree.Id != 5 {
 
-		t.Errorf("ClosestNodeTo estimated wrong %v %v %v", closestToTestEdgeThree, chordServers[6].minSize, chordServers[6].maxSize)
+		t.Errorf("ClosestNodeTo estimated wrong %v %v %v", closestToTestEdgeThree, chordServers[6].Minsize, chordServers[6].Maxsize)
 
 	}
 
@@ -569,7 +569,7 @@ func TestLookupOnce(t *testing.T) {
 
 	for _, vals := range chordServers{
 
-		fmt.Println(*vals.node, *vals.succ, *vals.succSucc)
+		fmt.Println(*vals.Node, *vals.Succ, *vals.SuccSucc)
 
 	}
 
@@ -591,7 +591,7 @@ func TestPinging(t *testing.T)  {
 
 	ctx := context.Background()
 
-	conn, err := grpc.Dial(chordServers[0].node.Address, grpc.WithInsecure())
+	conn, err := grpc.Dial(chordServers[0].Node.Address, grpc.WithInsecure())
 
 	if err != nil{
 
@@ -641,55 +641,55 @@ func TestMurder(t *testing.T) {
 	fmt.Println("First Loop")
 	for _, val := range chordServers {
 
-		fmt.Println(val.node.Id)
+		fmt.Println(val.Node.Id)
 
 	}
 
 	ctx := context.Background()
 
-	fmt.Println("22 Shortcuts:", chordServers[2].shortcuts)
+	fmt.Println("22 Shortcuts:", chordServers[2].Shortcuts)
 
 	chordServers[4].Leave(ctx, &empty.Empty{})
 	grpcServers[4].Stop()
 	chordServers[0].StabilizeAll(ctx, &empty.Empty{})
 
-	fmt.Println("22 Shortcuts:", chordServers[2].shortcuts)
+	fmt.Println("22 Shortcuts:", chordServers[2].Shortcuts)
 
-	fmt.Println("5 Shortcuts:", chordServers[0].shortcuts)
+	fmt.Println("5 Shortcuts:", chordServers[0].Shortcuts)
 
 	chordServers[1].Leave(ctx, &empty.Empty{})
 	grpcServers[1].Stop()
 	chordServers[0].StabilizeAll(ctx, &empty.Empty{})
 
-	fmt.Println("5 Shortcuts:", chordServers[0].shortcuts)
+	fmt.Println("5 Shortcuts:", chordServers[0].Shortcuts)
 
 	chordServers[5].Leave(ctx, &empty.Empty{})
 	grpcServers[5].Stop()
 	chordServers[0].StabilizeAll(ctx, &empty.Empty{})
 
-	fmt.Println("5 Shortcuts:", chordServers[0].shortcuts)
+	fmt.Println("5 Shortcuts:", chordServers[0].Shortcuts)
 	fmt.Println("Last Loop")
 	for _, val := range chordServers {
 
-		fmt.Println(val.node.Id)
+		fmt.Println(val.Node.Id)
 
 	}
 
 	for idx, val := range chordServers {
 
-		conn, _ := grpc.Dial(val.node.Address, grpc.WithInsecure())
+		conn, _ := grpc.Dial(val.Node.Address, grpc.WithInsecure())
 
 		c := pb.NewChordClient(conn)
 
 		ping, _ := c.Ping(ctx, &empty.Empty{})
 
-		fmt.Println("Pinging", val.node.Id, "at",val.node.Address)
+		fmt.Println("Pinging", val.Node.Id, "at",val.Node.Address)
 
 		_ = conn.Close()
 
 		if ping == nil {
 
-			fmt.Println("Nil", val.node.Id)
+			fmt.Println("Nil", val.Node.Id)
 
 			chordServers[idx] = nil
 			grpcServers[idx] = nil
@@ -711,7 +711,7 @@ func TestMurder(t *testing.T) {
 
 	for _, val := range chordServers {
 
-		fmt.Println(val.node.Id)
+		fmt.Println(val.Node.Id)
 
 	}
 

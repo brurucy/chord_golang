@@ -17,16 +17,16 @@ type ChordNode struct{
 }
 
 type ChordServer struct {
-	node *ChordNode
-	succ *ChordNode
-	succSucc *ChordNode
-	shortcuts []*ChordNode
-	minSize int32
-	maxSize int32
+	Node *ChordNode
+	Succ *ChordNode
+	SuccSucc *ChordNode
+	Shortcuts []*ChordNode
+	Minsize int32
+	Maxsize int32
 }
 
 func (s *ChordServer) AddShortcut(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
-	s.shortcuts = append(s.shortcuts, &ChordNode{
+	s.Shortcuts = append(s.Shortcuts, &ChordNode{
 		Id:      node.Id,
 		Address: node.Address,
 	})
@@ -45,7 +45,7 @@ func (s *ChordServer) Ping(context.Context, *empty.Empty) (*pb.PingResponse, err
 }
 
 func (s *ChordServer) SetSucc(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
-	s.succ = &ChordNode{
+	s.Succ = &ChordNode{
 		Id:      node.Id,
 		Address: node.Address,
 	}
@@ -53,7 +53,7 @@ func (s *ChordServer) SetSucc(ctx context.Context, node *pb.Node) (*empty.Empty,
 }
 
 func (s *ChordServer) SetSuccSucc(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
-	s.succSucc = &ChordNode{
+	s.SuccSucc = &ChordNode{
 		Id:      node.Id,
 		Address: node.Address,
 	}
@@ -63,14 +63,14 @@ func (s *ChordServer) SetSuccSucc(ctx context.Context, node *pb.Node) (*empty.Em
 func (s *ChordServer) Stabilize(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
 
 	// Fixing succ
-	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.node.Id + 1})
-	s.succ = &ChordNode{Id: successor.Id, Address: successor.Address}
+	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.Node.Id + 1})
+	s.Succ = &ChordNode{Id: successor.Id, Address: successor.Address}
 	// Fixing succ succ
-	successorSuccessor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.succ.Id + 1})
-	s.succSucc = &ChordNode{Id: successorSuccessor.Id, Address: successorSuccessor.Address}
+	successorSuccessor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.Succ.Id + 1})
+	s.SuccSucc = &ChordNode{Id: successorSuccessor.Id, Address: successorSuccessor.Address}
 
 
-	for idx, val := range s.shortcuts {
+	for idx, val := range s.Shortcuts {
 
 		conn, _ := grpc.Dial(val.Address, grpc.WithInsecure())
 
@@ -80,7 +80,7 @@ func (s *ChordServer) Stabilize(ctx context.Context, e *empty.Empty) (*empty.Emp
 
 		if ping == nil {
 
-			s.shortcuts = s.shortcuts[:idx+copy(s.shortcuts[idx:], s.shortcuts[idx+1:])]
+			s.Shortcuts = s.Shortcuts[:idx+copy(s.Shortcuts[idx:], s.Shortcuts[idx+1:])]
 
 		}
 
@@ -93,7 +93,7 @@ func (s *ChordServer) Stabilize(ctx context.Context, e *empty.Empty) (*empty.Emp
 
 func (s *ChordServer) StabilizeAll(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
 
-	startId := s.node.Id
+	startId := s.Node.Id
 	// Pseudo do-while loop
 	//fmt.Println("Stabilizing")
 	_, err := s.Stabilize(ctx, e)
@@ -102,7 +102,7 @@ func (s *ChordServer) StabilizeAll(ctx context.Context, e *empty.Empty) (*empty.
 		return &empty.Empty{}, err
 	}
 	//fmt.Println("Passed the stabilize call")
-	current := s.succ
+	current := s.Succ
 
 	for current.Id != startId {
 
@@ -134,7 +134,7 @@ func (s *ChordServer) StabilizeAll(ctx context.Context, e *empty.Empty) (*empty.
 
 func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
 
-	if node.Id > s.maxSize || node.Id < s.minSize {
+	if node.Id > s.Maxsize || node.Id < s.Minsize {
 
 		return &empty.Empty{}, nil
 
@@ -178,12 +178,12 @@ func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, er
 
 func (s *ChordServer) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.Node, error) {
 
-	if ShouldContainValue(s.succ.Id, request.Id, s.node.Id) {
+	if ShouldContainValue(s.Succ.Id, request.Id, s.Node.Id) {
 
-		return &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, nil
+		return &pb.Node{Id: s.Succ.Id, Address: s.Succ.Address}, nil
 
 	} else {
-		node, err := s.succ.FindSuccessor(ctx, request.Id)
+		node, err := s.Succ.FindSuccessor(ctx, request.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -194,12 +194,12 @@ func (s *ChordServer) FindSuccessor(ctx context.Context, request *pb.FindSuccess
 
 func (s *ChordServer) FindPredecessor(ctx context.Context, request *pb.FindPredecessorRequest) (*pb.Node, error) {
 
-	if ShouldContainValue(s.succ.Id, request.Id, s.node.Id) {
+	if ShouldContainValue(s.Succ.Id, request.Id, s.Node.Id) {
 
-		return &pb.Node{Id: s.node.Id, Address: s.node.Address}, nil
+		return &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, nil
 
 	} else {
-		node, err := s.succ.FindPredecessor(ctx, request.Id)
+		node, err := s.Succ.FindPredecessor(ctx, request.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -210,18 +210,18 @@ func (s *ChordServer) FindPredecessor(ctx context.Context, request *pb.FindPrede
 	/*
 	candidatePred := request.Id
 	// Base case i.e seeking 70 from 17
-	if candidatePred > s.node.Id && candidatePred < s.succ.Id {
-		return &pb.Node{Id: s.node.Id, Address: s.node.Address}, nil
+	if candidatePred > s.Node.Id && candidatePred < s.Succ.Id {
+		return &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, nil
 		// First Edge Case i.e seeking 4 from 92
-	} else if candidatePred < s.node.Id && s.node.Id > s.succ.Id && candidatePred < s.succ.Id {
-		return &pb.Node{Id: s.node.Id, Address: s.node.Address}, nil
+	} else if candidatePred < s.Node.Id && s.Node.Id > s.Succ.Id && candidatePred < s.Succ.Id {
+		return &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, nil
 		// Second Edge Case i.e seeking 94 from 92
-	} else if candidatePred > s.node.Id && s.node.Id > s.succ.Id {
-		return &pb.Node{Id: s.node.Id, Address: s.node.Address}, nil
-	} else if candidatePred > s.node.Id && s.succ.Id == s.node.Id {
-		return &pb.Node{Id: s.node.Id, Address: s.node.Address}, nil
+	} else if candidatePred > s.Node.Id && s.Node.Id > s.Succ.Id {
+		return &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, nil
+	} else if candidatePred > s.Node.Id && s.Succ.Id == s.Node.Id {
+		return &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, nil
 	} else {
-		node, err := s.succ.FindPredecessor(ctx, request.Id)
+		node, err := s.Succ.FindPredecessor(ctx, request.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -266,23 +266,23 @@ func (n *ChordNode) FindPredecessor(ctx context.Context, id int32) (*ChordNode, 
 
 func (s *ChordServer) ClosestNodeTo(ctx context.Context, n *pb.ClosestNodeToRequest) (*pb.Node, error){
 
-	succSuccDistance := RingDistance(s.succSucc.Id, n.Id, s.maxSize, s.minSize)
+	succSuccDistance := RingDistance(s.SuccSucc.Id, n.Id, s.Maxsize, s.Minsize)
 
-	if len(s.shortcuts) == 0 {
+	if len(s.Shortcuts) == 0 {
 
 		return &pb.Node{
-			Id:      s.succSucc.Id,
-			Address: s.succSucc.Address,
+			Id:      s.SuccSucc.Id,
+			Address: s.SuccSucc.Address,
 		}, nil
 
 	} else {
 
 		smallestDistance := succSuccDistance
-		closestHop := s.succSucc
+		closestHop := s.SuccSucc
 
-		for _, shortcut := range s.shortcuts {
+		for _, shortcut := range s.Shortcuts {
 
-			shortcutDistance := RingDistance(shortcut.Id, n.Id, s.maxSize, s.minSize)
+			shortcutDistance := RingDistance(shortcut.Id, n.Id, s.Maxsize, s.Minsize)
 
 			if shortcutDistance < smallestDistance {
 
@@ -322,22 +322,22 @@ func (n *ChordNode) Lookup(ctx context.Context, id, hops int32) (*ChordNode, int
 
 func (s *ChordServer) Lookup(ctx context.Context, request *pb.LookupRequest) (*pb.LookupResponse, error) {
 
-	if s.node.Id == request.Id {
+	if s.Node.Id == request.Id {
 
-		return &pb.LookupResponse{Node: &pb.Node{Id: s.node.Id, Address: s.node.Address}, Hops: request.Hops}, nil
+		return &pb.LookupResponse{Node: &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, Hops: request.Hops}, nil
 
-	} else if request.Id > s.maxSize || request.Id < s.minSize {
+	} else if request.Id > s.Maxsize || request.Id < s.Minsize {
 
 		return nil, nil
 
-	} else if ShouldContainValueTwo(s.succ.Id, request.Id, s.node.Id) {
+	} else if ShouldContainValueTwo(s.Succ.Id, request.Id, s.Node.Id) {
 
-		return &pb.LookupResponse{Node: &pb.Node{Id: s.succ.Id, Address: s.succ.Address}, Hops: request.Hops + 1}, nil
+		return &pb.LookupResponse{Node: &pb.Node{Id: s.Succ.Id, Address: s.Succ.Address}, Hops: request.Hops + 1}, nil
 
-	} else if ShouldContainValueTwo(s.succSucc.Id, request.Id, s.succ.Id) {
+	} else if ShouldContainValueTwo(s.SuccSucc.Id, request.Id, s.Succ.Id) {
 
 
-		return &pb.LookupResponse{Node: &pb.Node{Id: s.succSucc.Id, Address: s.succSucc.Address}, Hops: request.Hops + 2}, nil
+		return &pb.LookupResponse{Node: &pb.Node{Id: s.SuccSucc.Id, Address: s.SuccSucc.Address}, Hops: request.Hops + 2}, nil
 
 	} else {
 		next, _ := s.ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: request.Id})
@@ -352,7 +352,7 @@ func (s *ChordServer) Lookup(ctx context.Context, request *pb.LookupRequest) (*p
 		hops := request.Hops
 		var err error
 
-		if nextNode.Id == s.succSucc.Id {
+		if nextNode.Id == s.SuccSucc.Id {
 
 
 
@@ -368,7 +368,7 @@ func (s *ChordServer) Lookup(ctx context.Context, request *pb.LookupRequest) (*p
 		nodeResponse, hops, err = nextNode.Lookup(ctx, request.Id, hops)
 
 
-		//nodeResponse, hops, err := s.succSucc.Lookup(ctx, request.Id, request.Hops+2)
+		//nodeResponse, hops, err := s.SuccSucc.Lookup(ctx, request.Id, request.Hops+2)
 		if err != nil {
 			return nil, err
 		}
@@ -380,7 +380,7 @@ func (s *ChordServer) Lookup(ctx context.Context, request *pb.LookupRequest) (*p
 func (s *ChordServer) Leave(ctx context.Context, mpty *empty.Empty) (*empty.Empty, error) {
 
 
-	if s.node.Id == s.succ.Id && s.node.Id == s.succSucc.Id {
+	if s.Node.Id == s.Succ.Id && s.Node.Id == s.SuccSucc.Id {
 
 		newError := errors.New("Oh shizzle")
 
@@ -388,7 +388,7 @@ func (s *ChordServer) Leave(ctx context.Context, mpty *empty.Empty) (*empty.Empt
 
 	}
 
-	predecessor, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: s.node.Id-1})
+	predecessor, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: s.Node.Id-1})
 	//log.Printf("Successor: %v", successor)
 	predPred, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: predecessor.Id-1})
 	// Updating Successors
@@ -399,8 +399,8 @@ func (s *ChordServer) Leave(ctx context.Context, mpty *empty.Empty) (*empty.Empt
 		return &empty.Empty{}, err
 	}
 	c := pb.NewChordClient(conn)
-	_, err = c.SetSucc(ctx, &pb.Node{Id: s.succ.Id,
-		Address: s.succ.Address})
+	_, err = c.SetSucc(ctx, &pb.Node{Id: s.Succ.Id,
+		Address: s.Succ.Address})
 	conn.Close()
 	if err != nil {
 		fmt.Println("Error setting the node's successor")
@@ -414,8 +414,8 @@ func (s *ChordServer) Leave(ctx context.Context, mpty *empty.Empty) (*empty.Empt
 		return &empty.Empty{}, err
 	}
 	c = pb.NewChordClient(conn)
-	_, err = c.SetSuccSucc(ctx, &pb.Node{Id: s.succ.Id,
-		Address: s.succ.Address})
+	_, err = c.SetSuccSucc(ctx, &pb.Node{Id: s.Succ.Id,
+		Address: s.Succ.Address})
 	conn.Close()
 	if err != nil {
 		fmt.Println("Error setting predecessor's successor")
