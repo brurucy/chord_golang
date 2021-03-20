@@ -6,14 +6,16 @@ import (
 	"context"
 	"fmt"
 	prompt "github.com/c-bata/go-prompt"
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"strconv"
 	"strings"
 )
 
+// Keeping track of all currently active RPC Servers, that have some Node listening on
 var grpcServers []*grpc.Server
 // We are just saving the Addresses of the servers. the nodes are NOT aware of each other.
-// We are using RPC in order to communicate with, and between, the nodes.
+// We are using RPC in order to communicate with, and between, the nodes. It is fully multithreaded and networked.
 var chordServers []*src_rpc.ChordServer
 
 
@@ -23,7 +25,11 @@ func executor(in string) {
 
 	whitespaceSplit := strings.Fields(in)
 
-	if whitespaceSplit[0] != "Materialize" && whitespaceSplit[0] != "List" && whitespaceSplit[0] != "Lookup" && whitespaceSplit[0] != "Shutdown" {
+	if whitespaceSplit[0] != "Materialize" &&
+		whitespaceSplit[0] != "List" &&
+		whitespaceSplit[0] != "Lookup" &&
+		whitespaceSplit[0] != "Shutdown" &&
+		whitespaceSplit[0] != "Join"{
 
 		fmt.Println("Invalid command")
 
@@ -118,10 +124,10 @@ func executor(in string) {
 
 							} else if err == nil {
 
-								lookupStartNode := chordServers[0]            // set the smallest number to the first element of the list
-								for _, num := range chordServers[1:] { // iterate over the rest of the list
-									if num.Node.Id == int32(nodeId) {     // if num is smaller than the current smallest number
-										lookupStartNode = num      // set smallest to num
+								lookupStartNode := chordServers[0]
+								for _, num := range chordServers[1:] {
+									if num.Node.Id == int32(nodeId) {
+										lookupStartNode = num
 									}
 								}
 
@@ -155,6 +161,73 @@ func executor(in string) {
 
 			}
 
+		} else if whitespaceSplit[0] == "Join" {
+
+			if len(whitespaceSplit) < 2 || len(whitespaceSplit) > 2 {
+
+				fmt.Println("Join takes one argument, an id, not more, nor less")
+
+			} else {
+
+				keyId, err := strconv.ParseInt(whitespaceSplit[1], 10,32)
+
+				fmt.Println(keyId)
+
+				if err == nil {
+
+					_, isNodeInTheAddressList := src_rpc.Find(chordServers, int32(keyId))
+
+					if isNodeInTheAddressList == true {
+
+						fmt.Println("Node is already in the ring.")
+
+					} else {
+
+						smallest := chordServers[0]
+						for _, num := range chordServers[1:] {
+							if num.Node.Id < smallest.Node.Id {
+								smallest = num
+							}
+						}
+
+						newNode := &src_rpc.ChordNode{
+							Id:      int32(keyId),
+							Address: fmt.Sprintf("127.0.0.1:%v", 10100+len(chordServers)),
+						}
+
+						// Initializing chord and gRpc server
+						done := make(chan bool)
+						newChordServer := &src_rpc.ChordServer{Node: newNode}
+						newGrpcServer := grpc.NewServer()
+						go src_rpc.RunServer(newGrpcServer, newChordServer, done)
+						<-done
+
+						chordServers = append(chordServers, newChordServer)
+						grpcServers = append(grpcServers, newGrpcServer)
+
+						_, err = smallest.Join(context.Background(), &pb.Node{Id: newNode.Id,
+							Address: newNode.Address})
+
+						if err != nil {
+
+							fmt.Println("Failed to join the network")
+
+						} else {
+
+							// Recursively Propagate a message for the next node to stabilize itself, ends when next = itself
+							smallest.StabilizeAll(context.Background(), &empty.Empty{})
+						}
+
+					}
+
+				} else {
+
+					fmt.Println("invalid input for Join")
+
+				}
+
+			}
+
 		}
 
 	}
@@ -165,8 +238,9 @@ func completer(in prompt.Document) []prompt.Suggest {
 s := []prompt.Suggest{
 {Text: "Materialize", Description: "Loads the default config, no input"},
 //{Text: "Read", Description: "Reads a .txt file in the specified format"},
-{Text: "List", Description: "Lists all current active nodes, no input"},
+{Text: "List", Description: "Lists all current active nodes in the ring, no input"},
 {Text: "Lookup", Description: "Lookups up a node, key:start_node"},
+{Text: "Join", Description: "Joins the given node Id with the ring"},
 {Text: "Shutdown", Description: "Shuts down the whole cluster"},
 }
 return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
