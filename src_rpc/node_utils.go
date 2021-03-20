@@ -55,11 +55,11 @@ func RingDistance(from, to, maxSize, minSize int32) int32 {
 
 func ShouldContainValue(id int32, key int32, predId int32) bool {
 
-	if key > predId && key < id {
+	if key > predId && key <= id {
 		return true
-	} else if key < predId && predId > id && key < id {
+	} else if key < predId && predId > id && key <= id {
 		return true
-	} else if key > predId && predId > id {
+	} else if key > predId && predId >= id {
 		return true
 	} else if key > predId && id == predId {
 		return true

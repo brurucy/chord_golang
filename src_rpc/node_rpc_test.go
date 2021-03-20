@@ -740,6 +740,10 @@ func TestNPlusOneJoin(t *testing.T) {
 
 	ctx := context.Background()
 
+	fmt.Println(chordServers[0].HasValue(ctx, 92))
+
+	/*
+
 	chordServers[0].Join(ctx, &pb.Node{Id: chordServers[len(chordServers) - 1].Node.Id, Address: chordServers[len(chordServers) - 1].Node.Address})
 	fmt.Println("Does it join?")
 
@@ -757,6 +761,8 @@ func TestNPlusOneJoin(t *testing.T) {
 		fmt.Println(val.Node.Id, "S-",val.Succ.Id, "NS-", val.SuccSucc.Id)
 
 	}
+
+	 */
 
 	for _, val := range grpcServers{
 

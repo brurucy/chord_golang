@@ -63,10 +63,10 @@ func (s *ChordServer) SetSuccSucc(ctx context.Context, node *pb.Node) (*empty.Em
 func (s *ChordServer) Stabilize(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
 
 	// Fixing succ
-	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.Node.Id + 1})
+	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.Node.Id+1})
 	s.Succ = &ChordNode{Id: successor.Id, Address: successor.Address}
 	// Fixing succ succ
-	successorSuccessor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.Succ.Id + 1})
+	successorSuccessor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.Succ.Id+1})
 	s.SuccSucc = &ChordNode{Id: successorSuccessor.Id, Address: successorSuccessor.Address}
 
 
@@ -286,10 +286,20 @@ func (n *ChordNode) Lookup(ctx context.Context, id, hops int32) (*ChordNode, int
 	return &ChordNode{r.Node.Id, r.Node.Address}, r.Hops, nil
 }
 
+func (s *ChordServer) HasValue(ctx context.Context, id int32) bool{
+
+	// Have to change this
+	pred, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{
+		Id: s.Node.Id,
+	})
+
+	return ShouldContainValue(s.Node.Id, id, pred.Id)
+
+}
 
 func (s *ChordServer) Lookup(ctx context.Context, request *pb.LookupRequest) (*pb.LookupResponse, error) {
 
-	if s.Node.Id == request.Id {
+	if s.Node.Id == request.Id || s.HasValue(ctx, request.Id){
 
 		return &pb.LookupResponse{Node: &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, Hops: request.Hops}, nil
 
