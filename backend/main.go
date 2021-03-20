@@ -18,11 +18,11 @@ var grpcServers []*grpc.Server
 // We are just saving the Addresses of the servers. the nodes are NOT aware of each other.
 // We are using RPC in order to communicate with, and between, the nodes. It is fully multithreaded and networked.
 var chordServers []*src_rpc.ChordServer
-
+var MinSize int32
+var MaxSize int32
 
 
 func executor(in string) {
-	//fmt.Println("Your input: ")
 
 	whitespaceSplit := strings.Fields(in)
 
@@ -30,7 +30,9 @@ func executor(in string) {
 		whitespaceSplit[0] != "List" &&
 		whitespaceSplit[0] != "Lookup" &&
 		whitespaceSplit[0] != "Shutdown" &&
-		whitespaceSplit[0] != "Join"{
+		whitespaceSplit[0] != "Join" &&
+		whitespaceSplit[0] != "Leave" &&
+		whitespaceSplit[0] != "Shortcut"{
 
 		fmt.Println("Invalid command")
 
@@ -46,15 +48,27 @@ func executor(in string) {
 
 				chordServers, grpcServers = src_rpc.Materialize()
 
+				MinSize = chordServers[0].Minsize
+				MaxSize = chordServers[0].Maxsize
+
 			} else if whitespaceSplit[0] == "List" {
 
-				for _, val := range chordServers {
+				copyChordServers := append([]*src_rpc.ChordServer{}, chordServers...)
 
-					sort.Slice(chordServers,  func(i, j int) bool {
-						return chordServers[i].Node.Id < chordServers[j].Node.Id
-					})
+				sort.Slice(copyChordServers,  func(i, j int) bool {
+					return copyChordServers[i].Node.Id < copyChordServers[j].Node.Id})
 
-					fmt.Println(val.Node.Id, val.Shortcuts, "S-",val.Succ.Id, "NS-", val.SuccSucc.Id)
+				for _, val := range copyChordServers {
+
+					var shortcuts []int32
+
+					for _, val := range val.Shortcuts {
+
+						shortcuts = append(shortcuts, val.Id)
+
+					}
+
+					fmt.Println(val.Node.Id, shortcuts, "S-",val.Succ.Id, "NS-", val.SuccSucc.Id)
 
 				}
 
@@ -92,7 +106,7 @@ func executor(in string) {
 
 						keyId, err := strconv.ParseInt(keyStartNodes[0], 10,32)
 
-						if int32(keyId) <= chordServers[0].Minsize || int32(keyId) > chordServers[0].Maxsize {
+						if int32(keyId) <= MinSize || int32(keyId) > MaxSize {
 
 							fmt.Println("Node is smaller or equal than minSize or bigger than maxSize ")
 
@@ -121,7 +135,7 @@ func executor(in string) {
 
 						keyId, err := strconv.ParseInt(keyStartNodes[0], 10,32)
 
-						if int32(keyId) <= chordServers[0].Minsize || int32(keyId) > chordServers[0].Maxsize {
+						if int32(keyId) <= MinSize || int32(keyId) > MaxSize {
 
 							fmt.Println("Node is smaller or equal than minSize or bigger than maxSize ")
 
@@ -194,7 +208,7 @@ func executor(in string) {
 
 						fmt.Println("Node is already in the ring.")
 
-					} else if int32(keyId) <= chordServers[0].Minsize || int32(keyId) > chordServers[0].Maxsize {
+					} else if int32(keyId) <= MinSize || int32(keyId) > MaxSize {
 
 						fmt.Println("Node is smaller or equal than minSize or bigger than maxSize ")
 
@@ -245,10 +259,164 @@ func executor(in string) {
 
 			}
 
+		} else if whitespaceSplit[0] == "Leave" {
+
+			if len(whitespaceSplit) < 2 || len(whitespaceSplit) > 2 {
+
+				fmt.Println("Leave takes one argument, an id, not more, nor less")
+
+			} else {
+
+				keyId, err := strconv.ParseInt(whitespaceSplit[1], 10, 32)
+
+				if err == nil {
+
+					if int32(keyId) <= MinSize || int32(keyId) > MaxSize || len(chordServers) == 1 {
+
+						fmt.Println("Node is smaller or equal than minSize or bigger than maxSize or trying to leave as the last in the ring")
+
+					} else {
+
+						pos, isNodeInTheAddressList := src_rpc.Find(chordServers, int32(keyId))
+
+						if isNodeInTheAddressList == false {
+
+							fmt.Println("Can't lookup from a node that does not exist")
+
+						} else {
+
+							leaveServer := &(chordServers[pos])
+							leaveGrpcServer := &(grpcServers[pos])
+
+							var stabilizerNodeId int32
+							for i, _ := range chordServers {
+
+								if i != pos {
+
+									stabilizerNodeId = int32(i)
+
+								}
+
+							}
+
+							(*leaveServer).Leave(context.Background(), &empty.Empty{})
+							(*leaveGrpcServer).Stop()
+							chordServers[stabilizerNodeId].StabilizeAll(context.Background(), &empty.Empty{})
+
+							for idx, val := range chordServers {
+
+								conn, _ := grpc.Dial(val.Node.Address, grpc.WithInsecure())
+
+								c := pb.NewChordClient(conn)
+
+								ping, _ := c.Ping(context.Background(), &empty.Empty{})
+
+								fmt.Println("Pinging", val.Node.Id, "at",val.Node.Address)
+
+								_ = conn.Close()
+
+								if ping == nil {
+
+									fmt.Println("Nil", val.Node.Id)
+
+									chordServers[idx] = nil
+									grpcServers[idx] = nil
+
+								}
+
+							}
+
+							n := 0
+							for idx, x := range chordServers {
+								if x != nil {
+									chordServers[n] = x
+									grpcServers[n] = grpcServers[idx]
+									n++
+								}
+							}
+							chordServers = chordServers[:n]
+							grpcServers = grpcServers[:n]
+
+						}
+					}
+				} else {
+
+					fmt.Println("Failed to parse the which node to leave")
+
+
+				}
+			}
+		} else if whitespaceSplit[0] == "Shortcut" {
+
+			if len(whitespaceSplit) < 2 || len(whitespaceSplit) > 2 {
+
+				fmt.Println("Shortcut takes one argument, an id, not more, nor less")
+
+			} else {
+
+				keyStartNodes := strings.Split(whitespaceSplit[1], ":")
+				fmt.Println(keyStartNodes)
+
+				if len(keyStartNodes) != 2 {
+
+					fmt.Println("There cannot be more, or less, than 2 values delimited by :")
+
+				} else {
+
+					keyId, err := strconv.ParseInt(keyStartNodes[0], 10, 32)
+
+					if err != nil {
+
+						fmt.Println("Failed to parse the node")
+
+					} else {
+
+						shortcutId, err := strconv.ParseInt(keyStartNodes[1], 10, 32)
+
+						if err != nil {
+
+							fmt.Println("Failed to parse the shortcut")
+
+						} else {
+
+							pos_node, isNodeInTheAddressList := src_rpc.Find(chordServers, int32(keyId))
+
+							if isNodeInTheAddressList == false {
+
+								fmt.Println("Can't add a shortcut to a node that does not exist")
+
+							} else {
+
+								pos_shortcut, isShortcutInTheAddressList := src_rpc.Find(chordServers, int32(shortcutId))
+
+								if isShortcutInTheAddressList == false {
+
+									fmt.Println("Can't add a shortcut that does not exist")
+
+								} else {
+
+									_, err = chordServers[pos_node].AddShortcut(context.Background(), &pb.Node{Id: chordServers[pos_shortcut].Node.Id, Address: chordServers[pos_shortcut].Node.Address})
+
+									if err != nil {
+
+										fmt.Println("Error adding to list of shortcuts")
+
+									}
+
+								}
+
+							}
+
+						}
+
+					}
+
+				}
+
+			}
+
 		}
-
 	}
-
 }
 
 func completer(in prompt.Document) []prompt.Suggest {
@@ -258,6 +426,8 @@ s := []prompt.Suggest{
 {Text: "List", Description: "Lists all current active nodes in the ring, no input"},
 {Text: "Lookup", Description: "Lookups up a node, key:start_node"},
 {Text: "Join", Description: "Joins the given node Id with the ring"},
+{Text: "Leave", Description: "Shuts down the specified Node"},
+{Text: "Shortcut", Description: "Adds a shortcut to the specified node"},
 {Text: "Shutdown", Description: "Shuts down the whole cluster"},
 }
 return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)

@@ -668,6 +668,25 @@ func TestMurder(t *testing.T) {
 	chordServers[0].StabilizeAll(ctx, &empty.Empty{})
 
 	fmt.Println("5 Shortcuts:", chordServers[0].Shortcuts)
+
+	pos, _ := Find(chordServers, int32(0))
+
+	var stabilizerNodeId int32
+	for i, _ := range chordServers {
+
+		if i != pos {
+
+			stabilizerNodeId = int32(i)
+
+		}
+
+	}
+
+
+	chordServers[0].Leave(ctx, &empty.Empty{})
+	grpcServers[0].Stop()
+	chordServers[stabilizerNodeId].StabilizeAll(ctx, &empty.Empty{})
+
 	fmt.Println("Last Loop")
 	for _, val := range chordServers {
 

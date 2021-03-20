@@ -205,31 +205,6 @@ func (s *ChordServer) FindPredecessor(ctx context.Context, request *pb.FindPrede
 		}
 		return &pb.Node{Id: node.Id, Address: node.Address}, nil
 	}
-
-
-	/*
-	candidatePred := request.Id
-	// Base case i.e seeking 70 from 17
-	if candidatePred > s.Node.Id && candidatePred < s.Succ.Id {
-		return &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, nil
-		// First Edge Case i.e seeking 4 from 92
-	} else if candidatePred < s.Node.Id && s.Node.Id > s.Succ.Id && candidatePred < s.Succ.Id {
-		return &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, nil
-		// Second Edge Case i.e seeking 94 from 92
-	} else if candidatePred > s.Node.Id && s.Node.Id > s.Succ.Id {
-		return &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, nil
-	} else if candidatePred > s.Node.Id && s.Succ.Id == s.Node.Id {
-		return &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, nil
-	} else {
-		node, err := s.Succ.FindPredecessor(ctx, request.Id)
-		if err != nil {
-			return nil, err
-		}
-		return &pb.Node{Id: node.Id, Address: node.Address}, nil
-	}
-
-	 */
-
 }
 
 // Node mutual recursion
@@ -321,6 +296,10 @@ func (n *ChordNode) Lookup(ctx context.Context, id, hops int32) (*ChordNode, int
 
 
 func (s *ChordServer) Lookup(ctx context.Context, request *pb.LookupRequest) (*pb.LookupResponse, error) {
+
+	//pred, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: s.Node.Id})
+
+	//fmt.Println(pred)
 
 	if s.Node.Id == request.Id {
 
