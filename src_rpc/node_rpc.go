@@ -20,6 +20,7 @@ type ChordServer struct {
 	Succ      *ChordNode
 	SuccSucc  *ChordNode
 	Shortcuts []*ChordNode
+	Data      map[int32]bool
 	Minsize   int32
 	Maxsize   int32
 }
@@ -40,6 +41,86 @@ func (s *ChordServer) Ping(context.Context, *empty.Empty) (*pb.PingResponse, err
 
 	return &response,
 		nil
+
+}
+
+func (s *ChordServer) MigrateData(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
+
+	currentId := s.Node.Id
+	pred, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: s.Node.Id})
+	s.Data = make(map[int32]bool, 0)
+	predId := pred.Id
+
+	if currentId > predId {
+
+		for i := predId + 1; i <= currentId; i++ {
+
+			s.Data[i] = true
+
+		}
+
+	} else {
+
+		for i := predId + 1; i <= s.Maxsize; i++ {
+
+			s.Data[i] = true
+
+		}
+		for i := s.Minsize + 1; i <= currentId; i++ {
+
+			s.Data[i] = true
+
+		}
+
+	}
+
+	return e, nil
+
+}
+
+func (s *ChordServer) GetSucc(context.Context, *empty.Empty) (*pb.Node, error) {
+
+	return &pb.Node{Id: s.Succ.Id, Address: s.Succ.Address}, nil
+
+}
+
+func (s *ChordServer) MigrateDataAll(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
+
+	startId := s.Node.Id
+	_, err := s.MigrateData(ctx, e)
+	if err != nil {
+		fmt.Printf("Failed to Migrate starting node data: %v", err)
+		return e, err
+	}
+	//fmt.Println("Passed the stabilize call")
+	current := s.Succ
+
+	for current.Id != startId {
+
+		//fmt.Println("Currently at: ", current.Id)
+
+		conn, err := grpc.Dial(current.Address, grpc.WithInsecure())
+		if err != nil {
+			fmt.Printf("Failed to Dial %v", err)
+			return &empty.Empty{}, nil
+		}
+		c := pb.NewChordClient(conn)
+		_, err = c.MigrateData(ctx, &empty.Empty{})
+		if err != nil {
+			fmt.Printf("Failed to Migrate %v", err)
+			return &empty.Empty{}, nil
+		}
+
+		//TODO GetSucc rpc
+		//next, _ := c.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: current.Id + 1})
+		next, _ := c.GetSucc(ctx, &empty.Empty{})
+
+		_ = conn.Close()
+
+		current = &ChordNode{Id: next.Id, Address: next.Address}
+	}
+
+	return &empty.Empty{}, nil
 
 }
 
@@ -115,12 +196,15 @@ func (s *ChordServer) StabilizeAll(ctx context.Context, e *empty.Empty) (*empty.
 			fmt.Printf("Failed to Stabilize %v", err)
 			return &empty.Empty{}, nil
 		}
+
 		next, _ := c.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: current.Id + 1})
 
 		_ = conn.Close()
 
 		current = &ChordNode{Id: next.Id, Address: next.Address}
 	}
+
+	_, err = s.MigrateDataAll(ctx, &empty.Empty{})
 
 	return &empty.Empty{}, nil
 
@@ -292,11 +376,15 @@ func (n *ChordNode) Lookup(ctx context.Context, id, hops int32) (*ChordNode, int
 
 func (s *ChordServer) HasValue(ctx context.Context, id int32) bool {
 
-	pred, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{
-		Id: s.Node.Id,
-	})
+	/*
+		pred, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{
+			Id: s.Node.Id,
+		})
 
-	return ShouldContainValue(s.Node.Id, id, pred.Id)
+		return ShouldContainValue(s.Node.Id, id, pred.Id)
+	*/
+
+	return s.Data[id]
 
 }
 

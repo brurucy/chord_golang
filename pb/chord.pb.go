@@ -409,7 +409,7 @@ var file_chord_proto_rawDesc = []byte{
 	0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72,
 	0x65, 0x73, 0x73, 0x22, 0x24, 0x0a, 0x0c, 0x50, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f,
 	0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x6c, 0x69, 0x76, 0x65, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x08, 0x52, 0x05, 0x61, 0x6c, 0x69, 0x76, 0x65, 0x32, 0x94, 0x05, 0x0a, 0x05, 0x43, 0x68,
+	0x28, 0x08, 0x52, 0x05, 0x61, 0x6c, 0x69, 0x76, 0x65, 0x32, 0xc8, 0x06, 0x0a, 0x05, 0x43, 0x68,
 	0x6f, 0x72, 0x64, 0x12, 0x32, 0x0a, 0x04, 0x50, 0x69, 0x6e, 0x67, 0x12, 0x16, 0x2e, 0x67, 0x6f,
 	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d,
 	0x70, 0x74, 0x79, 0x1a, 0x10, 0x2e, 0x70, 0x62, 0x2e, 0x50, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73,
@@ -451,8 +451,19 @@ var file_chord_proto_rawDesc = []byte{
 	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
 	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00,
-	0x42, 0x11, 0x5a, 0x0f, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x5f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67,
-	0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x12, 0x3f, 0x0a, 0x0b, 0x4d, 0x69, 0x67, 0x72, 0x61, 0x74, 0x65, 0x44, 0x61, 0x74, 0x61, 0x12,
+	0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22,
+	0x00, 0x12, 0x42, 0x0a, 0x0e, 0x4d, 0x69, 0x67, 0x72, 0x61, 0x74, 0x65, 0x44, 0x61, 0x74, 0x61,
+	0x41, 0x6c, 0x6c, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d,
+	0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x2d, 0x0a, 0x07, 0x47, 0x65, 0x74, 0x53, 0x75, 0x63, 0x63,
+	0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x08, 0x2e, 0x70, 0x62, 0x2e, 0x4e, 0x6f,
+	0x64, 0x65, 0x22, 0x00, 0x42, 0x11, 0x5a, 0x0f, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x5f, 0x67, 0x6f,
+	0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -492,20 +503,26 @@ var file_chord_proto_depIdxs = []int32{
 	5,  // 10: pb.Chord.AddShortcut:input_type -> pb.Node
 	0,  // 11: pb.Chord.Lookup:input_type -> pb.LookupRequest
 	7,  // 12: pb.Chord.Leave:input_type -> google.protobuf.Empty
-	6,  // 13: pb.Chord.Ping:output_type -> pb.PingResponse
-	7,  // 14: pb.Chord.SetSucc:output_type -> google.protobuf.Empty
-	7,  // 15: pb.Chord.SetSuccSucc:output_type -> google.protobuf.Empty
-	5,  // 16: pb.Chord.FindSuccessor:output_type -> pb.Node
-	5,  // 17: pb.Chord.FindPredecessor:output_type -> pb.Node
-	7,  // 18: pb.Chord.Join:output_type -> google.protobuf.Empty
-	7,  // 19: pb.Chord.Stabilize:output_type -> google.protobuf.Empty
-	7,  // 20: pb.Chord.StabilizeAll:output_type -> google.protobuf.Empty
-	5,  // 21: pb.Chord.ClosestNodeTo:output_type -> pb.Node
-	7,  // 22: pb.Chord.AddShortcut:output_type -> google.protobuf.Empty
-	1,  // 23: pb.Chord.Lookup:output_type -> pb.LookupResponse
-	7,  // 24: pb.Chord.Leave:output_type -> google.protobuf.Empty
-	13, // [13:25] is the sub-list for method output_type
-	1,  // [1:13] is the sub-list for method input_type
+	7,  // 13: pb.Chord.MigrateData:input_type -> google.protobuf.Empty
+	7,  // 14: pb.Chord.MigrateDataAll:input_type -> google.protobuf.Empty
+	7,  // 15: pb.Chord.GetSucc:input_type -> google.protobuf.Empty
+	6,  // 16: pb.Chord.Ping:output_type -> pb.PingResponse
+	7,  // 17: pb.Chord.SetSucc:output_type -> google.protobuf.Empty
+	7,  // 18: pb.Chord.SetSuccSucc:output_type -> google.protobuf.Empty
+	5,  // 19: pb.Chord.FindSuccessor:output_type -> pb.Node
+	5,  // 20: pb.Chord.FindPredecessor:output_type -> pb.Node
+	7,  // 21: pb.Chord.Join:output_type -> google.protobuf.Empty
+	7,  // 22: pb.Chord.Stabilize:output_type -> google.protobuf.Empty
+	7,  // 23: pb.Chord.StabilizeAll:output_type -> google.protobuf.Empty
+	5,  // 24: pb.Chord.ClosestNodeTo:output_type -> pb.Node
+	7,  // 25: pb.Chord.AddShortcut:output_type -> google.protobuf.Empty
+	1,  // 26: pb.Chord.Lookup:output_type -> pb.LookupResponse
+	7,  // 27: pb.Chord.Leave:output_type -> google.protobuf.Empty
+	7,  // 28: pb.Chord.MigrateData:output_type -> google.protobuf.Empty
+	7,  // 29: pb.Chord.MigrateDataAll:output_type -> google.protobuf.Empty
+	5,  // 30: pb.Chord.GetSucc:output_type -> pb.Node
+	16, // [16:31] is the sub-list for method output_type
+	1,  // [1:16] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name
@@ -646,6 +663,9 @@ type ChordClient interface {
 	AddShortcut(ctx context.Context, in *Node, opts ...grpc.CallOption) (*empty.Empty, error)
 	Lookup(ctx context.Context, in *LookupRequest, opts ...grpc.CallOption) (*LookupResponse, error)
 	Leave(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
+	MigrateData(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
+	MigrateDataAll(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
+	GetSucc(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Node, error)
 }
 
 type chordClient struct {
@@ -764,6 +784,33 @@ func (c *chordClient) Leave(ctx context.Context, in *empty.Empty, opts ...grpc.C
 	return out, nil
 }
 
+func (c *chordClient) MigrateData(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/pb.Chord/MigrateData", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chordClient) MigrateDataAll(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/pb.Chord/MigrateDataAll", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chordClient) GetSucc(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Node, error) {
+	out := new(Node)
+	err := c.cc.Invoke(ctx, "/pb.Chord/GetSucc", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChordServer is the server API for Chord service.
 type ChordServer interface {
 	Ping(context.Context, *empty.Empty) (*PingResponse, error)
@@ -778,6 +825,9 @@ type ChordServer interface {
 	AddShortcut(context.Context, *Node) (*empty.Empty, error)
 	Lookup(context.Context, *LookupRequest) (*LookupResponse, error)
 	Leave(context.Context, *empty.Empty) (*empty.Empty, error)
+	MigrateData(context.Context, *empty.Empty) (*empty.Empty, error)
+	MigrateDataAll(context.Context, *empty.Empty) (*empty.Empty, error)
+	GetSucc(context.Context, *empty.Empty) (*Node, error)
 }
 
 // UnimplementedChordServer can be embedded to have forward compatible implementations.
@@ -819,6 +869,15 @@ func (*UnimplementedChordServer) Lookup(context.Context, *LookupRequest) (*Looku
 }
 func (*UnimplementedChordServer) Leave(context.Context, *empty.Empty) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Leave not implemented")
+}
+func (*UnimplementedChordServer) MigrateData(context.Context, *empty.Empty) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MigrateData not implemented")
+}
+func (*UnimplementedChordServer) MigrateDataAll(context.Context, *empty.Empty) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MigrateDataAll not implemented")
+}
+func (*UnimplementedChordServer) GetSucc(context.Context, *empty.Empty) (*Node, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSucc not implemented")
 }
 
 func RegisterChordServer(s *grpc.Server, srv ChordServer) {
@@ -1041,6 +1100,60 @@ func _Chord_Leave_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Chord_MigrateData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).MigrateData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.Chord/MigrateData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).MigrateData(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Chord_MigrateDataAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).MigrateDataAll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.Chord/MigrateDataAll",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).MigrateDataAll(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Chord_GetSucc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).GetSucc(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.Chord/GetSucc",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).GetSucc(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Chord_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "pb.Chord",
 	HandlerType: (*ChordServer)(nil),
@@ -1092,6 +1205,18 @@ var _Chord_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Leave",
 			Handler:    _Chord_Leave_Handler,
+		},
+		{
+			MethodName: "MigrateData",
+			Handler:    _Chord_MigrateData_Handler,
+		},
+		{
+			MethodName: "MigrateDataAll",
+			Handler:    _Chord_MigrateDataAll_Handler,
+		},
+		{
+			MethodName: "GetSucc",
+			Handler:    _Chord_GetSucc_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -19,6 +19,9 @@ service Chord {
   rpc AddShortcut (Node) returns (google.protobuf.Empty) {}
   rpc Lookup (LookupRequest) returns (LookupResponse) {}
   rpc Leave (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc MigrateData (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc MigrateDataAll (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc GetSucc (google.protobuf.Empty) returns (Node) {}
 
 }
 

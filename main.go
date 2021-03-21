@@ -479,14 +479,14 @@ func executor(in string) {
 
 func completer(in prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
-		{Text: "Materialize", Description: "Loads the default config, no input needed"},
-		{Text: "Read", Description: "Reads a .txt file in the specified format"},
+		//{Text: "Materialize", Description: "Loads the default config, no input needed"},
+		//{Text: "Read", Description: "Reads a .txt file in the specified format"},
 		{Text: "List", Description: "Lists all current active nodes in the ring, no input"},
 		{Text: "Lookup", Description: "Lookups up a node, key:start_node"},
 		{Text: "Join", Description: "Joins the given node Id with the ring"},
 		{Text: "Leave", Description: "Shuts down the specified Node"},
 		{Text: "Shortcut", Description: "Adds a shortcut to the specified node"},
-		{Text: "Shutdown", Description: "Shuts down the whole cluster"},
+		//{Text: "Shutdown", Description: "Shuts down the whole cluster"},
 	}
 	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
 }

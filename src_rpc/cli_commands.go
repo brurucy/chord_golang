@@ -56,7 +56,7 @@ func Materialize() ([]*ChordServer, []*grpc.Server) {
 	addr := []string{"127.0.0.1:10000", "127.0.0.1:10001", "127.0.0.1:10002", "127.0.0.1:10003", "127.0.0.1:10004", "127.0.0.1:10005", "127.0.0.1:10006"}
 	n := 7
 	for i := 0; i < n; i++ {
-		chordServers = append(chordServers, &ChordServer{Node: &ChordNode{Address: addr[i], Id: ids[i]}})
+		chordServers = append(chordServers, &ChordServer{Node: &ChordNode{Address: addr[i], Id: ids[i]}, Data: make(map[int32]bool, 0)})
 		grpcServers = append(grpcServers, grpc.NewServer())
 		go RunServer(grpcServers[i], chordServers[i], done)
 		chordServers[i].Minsize = min
@@ -129,7 +129,7 @@ func Read(MinSize int32, MaxSize int32, nodes []int32, shortcuts []parser.Shortc
 	n = len(addr)
 
 	for i := 0; i < n; i++ {
-		chordServers = append(chordServers, &ChordServer{Node: &ChordNode{Address: addr[i], Id: nodes[i]}})
+		chordServers = append(chordServers, &ChordServer{Node: &ChordNode{Address: addr[i], Id: nodes[i]}, Data: make(map[int32]bool, 0)})
 		grpcServers = append(grpcServers, grpc.NewServer())
 		go RunServer(grpcServers[i], chordServers[i], done)
 		chordServers[i].Minsize = MinSize
@@ -149,6 +149,8 @@ func Read(MinSize int32, MaxSize int32, nodes []int32, shortcuts []parser.Shortc
 		chordServers[0].Join(ctx, &pb.Node{Id: chordServers[i].Node.Id, Address: chordServers[i].Node.Address})
 		chordServers[0].StabilizeAll(ctx, &empty.Empty{})
 	}
+
+	//chordServers[0].MigrateDataAll(ctx, &empty.Empty{})
 
 	for _, val := range shortcuts {
 
