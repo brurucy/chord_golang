@@ -1,50 +1,55 @@
 package main
 
 import (
+	"chord_golang/parser"
 	"chord_golang/pb"
 	"chord_golang/src_rpc"
 	"context"
 	"fmt"
-	prompt "github.com/c-bata/go-prompt"
-	"github.com/golang/protobuf/ptypes/empty"
-	"google.golang.org/grpc"
+	"math/rand"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
+
+	prompt "github.com/c-bata/go-prompt"
+	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc"
 )
 
 // Keeping track of all currently active RPC Servers, that have some Node listening on
 var grpcServers []*grpc.Server
+
 // We are just saving the Addresses of the servers. the nodes are NOT aware of each other.
 // We are using RPC in order to communicate with, and between, the nodes. It is fully multithreaded and networked.
 var chordServers []*src_rpc.ChordServer
 var MinSize int32
 var MaxSize int32
 
-
 func executor(in string) {
 
 	whitespaceSplit := strings.Fields(in)
 
-	if whitespaceSplit[0] != "Materialize" &&
+	if whitespaceSplit[0] != "Read" &&
+		whitespaceSplit[0] != "Materialize" &&
 		whitespaceSplit[0] != "List" &&
 		whitespaceSplit[0] != "Lookup" &&
 		whitespaceSplit[0] != "Shutdown" &&
 		whitespaceSplit[0] != "Join" &&
 		whitespaceSplit[0] != "Leave" &&
-		whitespaceSplit[0] != "Shortcut"{
+		whitespaceSplit[0] != "Shortcut" {
 
 		fmt.Println("Invalid command")
 
 	} else {
 
-		if (whitespaceSplit[0] == "Materialize" || whitespaceSplit[0] == "List" || whitespaceSplit[0] == "Shutdown") {
+		if whitespaceSplit[0] == "Materialize" || whitespaceSplit[0] == "List" || whitespaceSplit[0] == "Shutdown" {
 
 			if len(whitespaceSplit) > 1 {
 
 				fmt.Println("Materialize and List take no arguments")
 
-			} else if whitespaceSplit[0] == "Materialize"{
+			} else if whitespaceSplit[0] == "Materialize" {
 
 				chordServers, grpcServers = src_rpc.Materialize()
 
@@ -55,8 +60,9 @@ func executor(in string) {
 
 				copyChordServers := append([]*src_rpc.ChordServer{}, chordServers...)
 
-				sort.Slice(copyChordServers,  func(i, j int) bool {
-					return copyChordServers[i].Node.Id < copyChordServers[j].Node.Id})
+				sort.Slice(copyChordServers, func(i, j int) bool {
+					return copyChordServers[i].Node.Id < copyChordServers[j].Node.Id
+				})
 
 				for _, val := range copyChordServers {
 
@@ -68,7 +74,12 @@ func executor(in string) {
 
 					}
 
-					fmt.Println(val.Node.Id, shortcuts, "S-",val.Succ.Id, "NS-", val.SuccSucc.Id)
+					fmt.Println(val.Node.Id, shortcuts, "S-", val.Succ.Id, "NS-", val.SuccSucc.Id, "on port:", val.Node.Address)
+					//fmt.Println(val.Node.Id)
+					//fmt.Println(shortcuts)
+					//fmt.Println("S-", val.Succ.Id)
+					//fmt.Println("NS-", val.SuccSucc.Id)
+					//fmt.Println("on port:", val.Node.Address)
 
 				}
 
@@ -104,7 +115,7 @@ func executor(in string) {
 							}
 						}
 
-						keyId, err := strconv.ParseInt(keyStartNodes[0], 10,32)
+						keyId, err := strconv.ParseInt(keyStartNodes[0], 10, 32)
 
 						if int32(keyId) <= MinSize || int32(keyId) > MaxSize {
 
@@ -130,16 +141,15 @@ func executor(in string) {
 
 						}
 
-
 					} else {
 
-						keyId, err := strconv.ParseInt(keyStartNodes[0], 10,32)
+						keyId, err := strconv.ParseInt(keyStartNodes[0], 10, 32)
 
 						if int32(keyId) <= MinSize || int32(keyId) > MaxSize {
 
 							fmt.Println("Node is smaller or equal than minSize or bigger than maxSize ")
 
- 						} else if err == nil {
+						} else if err == nil {
 
 							nodeId, err := strconv.ParseInt(keyStartNodes[1], 10, 32)
 
@@ -168,7 +178,6 @@ func executor(in string) {
 
 								fmt.Println("Data in node", lookupResponse.Node.Id, "with", lookupResponse.Hops, "hops")
 
-
 							} else {
 
 								fmt.Println("Couldn't parse the source node")
@@ -180,7 +189,6 @@ func executor(in string) {
 							fmt.Println("Couldn't parse the destination node", err)
 
 						}
-
 
 					}
 
@@ -196,7 +204,7 @@ func executor(in string) {
 
 			} else {
 
-				keyId, err := strconv.ParseInt(whitespaceSplit[1], 10,32)
+				keyId, err := strconv.ParseInt(whitespaceSplit[1], 10, 32)
 
 				fmt.Println(keyId)
 
@@ -223,12 +231,12 @@ func executor(in string) {
 
 						newNode := &src_rpc.ChordNode{
 							Id:      int32(keyId),
-							Address: fmt.Sprintf("127.0.0.1:%v", 10100+len(chordServers)),
+							Address: fmt.Sprintf("127.0.0.1:%v", 10000+rand.Intn(10000)),
 						}
 
 						// Initializing chord and gRpc server
 						done := make(chan bool)
-						newChordServer := &src_rpc.ChordServer{Node: newNode}
+						newChordServer := &src_rpc.ChordServer{Node: newNode, Minsize: MinSize, Maxsize: MaxSize}
 						newGrpcServer := grpc.NewServer()
 						go src_rpc.RunServer(newGrpcServer, newChordServer, done)
 						<-done
@@ -246,7 +254,9 @@ func executor(in string) {
 						} else {
 
 							// Recursively Propagate a message for the next node to stabilize itself, ends when next = itself
+							fmt.Println("Stabilize attempt")
 							smallest.StabilizeAll(context.Background(), &empty.Empty{})
+							fmt.Println("Stabilize completed")
 						}
 
 					}
@@ -281,7 +291,7 @@ func executor(in string) {
 
 						if isNodeInTheAddressList == false {
 
-							fmt.Println("Can't lookup from a node that does not exist")
+							fmt.Println("Can't Leave from a node that does not exist")
 
 						} else {
 
@@ -289,19 +299,40 @@ func executor(in string) {
 							leaveGrpcServer := &(grpcServers[pos])
 
 							var stabilizerNodeId int32
-							for i, _ := range chordServers {
 
-								if i != pos {
+							/*
+								for i, _ := range chordServers {
 
-									stabilizerNodeId = int32(i)
+									if i != pos {
+
+										stabilizerNodeId = int32(i)
+
+									}
 
 								}
+							*/
+
+							stabilizerNodeId = chordServers[pos].Succ.Id
+
+							stabilizerNodeIndex, _ := src_rpc.Find(chordServers, stabilizerNodeId)
+
+							fmt.Println("Attempting to leave at", keyId, "with stabilizer", stabilizerNodeId) //chordServers[stabilizerNodeId].Node.Id)
+							(*leaveServer).Leave(context.Background(), &empty.Empty{})
+							fmt.Println("Left")
+							(*leaveGrpcServer).Stop()
+							fmt.Println("Successfully stopped gRPC server")
+
+							if len(chordServers) < 2 {
+
+								(*chordServers[pos]).Succ = (*chordServers[pos]).Node
+								(*chordServers[pos]).SuccSucc = (*chordServers[pos]).Node
+
+							} else {
+
+								chordServers[stabilizerNodeIndex].StabilizeAll(context.Background(), &empty.Empty{})
+								fmt.Println("Succesfully stabilized, on nodeId ", stabilizerNodeId)
 
 							}
-
-							(*leaveServer).Leave(context.Background(), &empty.Empty{})
-							(*leaveGrpcServer).Stop()
-							chordServers[stabilizerNodeId].StabilizeAll(context.Background(), &empty.Empty{})
 
 							for idx, val := range chordServers {
 
@@ -319,6 +350,7 @@ func executor(in string) {
 
 									chordServers[idx] = nil
 									grpcServers[idx] = nil
+									fmt.Println(val.Node.Id, "is not alive")
 
 								}
 
@@ -340,7 +372,6 @@ func executor(in string) {
 				} else {
 
 					fmt.Println("Failed to parse the which node to leave")
-
 
 				}
 			}
@@ -413,30 +444,80 @@ func executor(in string) {
 
 			}
 
+		} else if whitespaceSplit[0] == "Read" {
+
+			if len(whitespaceSplit) < 2 || len(whitespaceSplit) > 2 {
+
+				fmt.Println("Read takes one argument, a text file")
+
+			} else {
+
+				file_location := whitespaceSplit[1]
+
+				file, err := parser.Parse(file_location)
+
+				if err != nil {
+
+					fmt.Printf("Something bad happened whilst parsing", err)
+
+				} else {
+
+					MinSize = file.MinSize
+					MaxSize = file.MaxSize
+					nodes := file.Nodes
+					shortcuts := file.Shortcuts
+
+					chordServers, grpcServers = src_rpc.Read(MinSize, MaxSize, nodes, shortcuts)
+
+				}
+
+			}
+
 		}
 	}
 }
 
 func completer(in prompt.Document) []prompt.Suggest {
-s := []prompt.Suggest{
-{Text: "Materialize", Description: "Loads the default config, no input"},
-//{Text: "Read", Description: "Reads a .txt file in the specified format"},
-{Text: "List", Description: "Lists all current active nodes in the ring, no input"},
-{Text: "Lookup", Description: "Lookups up a node, key:start_node"},
-{Text: "Join", Description: "Joins the given node Id with the ring"},
-{Text: "Leave", Description: "Shuts down the specified Node"},
-{Text: "Shortcut", Description: "Adds a shortcut to the specified node"},
-{Text: "Shutdown", Description: "Shuts down the whole cluster"},
-}
-return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
+	s := []prompt.Suggest{
+		{Text: "Materialize", Description: "Loads the default config, no input needed"},
+		{Text: "Read", Description: "Reads a .txt file in the specified format"},
+		{Text: "List", Description: "Lists all current active nodes in the ring, no input"},
+		{Text: "Lookup", Description: "Lookups up a node, key:start_node"},
+		{Text: "Join", Description: "Joins the given node Id with the ring"},
+		{Text: "Leave", Description: "Shuts down the specified Node"},
+		{Text: "Shortcut", Description: "Adds a shortcut to the specified node"},
+		{Text: "Shutdown", Description: "Shuts down the whole cluster"},
+	}
+	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
 }
 
 func main() {
-	p := prompt.New(
-		executor,
-		completer,
-		prompt.OptionPrefix("λ "),
-		prompt.OptionTitle("prompt for huber's take on chord"),
-	)
-	p.Run()
+
+	if len(os.Args) < 2 {
+
+		fmt.Println("No argument given")
+		os.Exit(1)
+
+	} else {
+
+		parsedArgs := strings.TrimSpace(os.Args[1])
+
+		if strings.HasSuffix(parsedArgs, ".txt") {
+
+			executor(fmt.Sprintf("Read %s", parsedArgs))
+
+			p := prompt.New(
+				executor,
+				completer,
+				prompt.OptionPrefix("λ "),
+				prompt.OptionTitle("prompt for huber's take on chord"),
+			)
+			p.Run()
+		} else {
+
+			fmt.Println("Please provide a .txt file")
+			os.Exit(1)
+
+		}
+	}
 }

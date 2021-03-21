@@ -3,22 +3,25 @@ package parser
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"strconv"
 	"strings"
-
 )
 
-type InputFile struct {
-	MinSize int32
-	MaxSize int32
-	Nodes []int32
-	Shortcuts []string
+type Shortcut struct {
+	Key      int32
+	Shortcut int32
 }
 
-func parse(input string) (*InputFile, error) {
+type InputFile struct {
+	MinSize   int32
+	MaxSize   int32
+	Nodes     []int32
+	Shortcuts []Shortcut
+}
+
+func Parse(input string) (*InputFile, error) {
 
 	file := InputFile{}
 
@@ -42,7 +45,6 @@ func parse(input string) (*InputFile, error) {
 			headerRune := []rune(header)
 			headerRune = headerRune[1:len(headerRune)]
 			header = string(headerRune)
-
 
 		} else {
 
@@ -70,17 +72,27 @@ func parse(input string) (*InputFile, error) {
 
 					header = ""
 
-					fmt.Println(nodes)
-
 				}
 
 			} else if header == "shortcuts" {
 
 				shortcuts := strings.Split(currentLine, ", ")
+				file.Shortcuts = make([]Shortcut, 0)
 
 				if len(shortcuts) > 0 {
 
-					file.Shortcuts = shortcuts
+					file.Shortcuts = make([]Shortcut, 0)
+
+					for _, val := range shortcuts {
+
+						shortcut := strings.Split(val, ":")
+						keyParsed, _ := strconv.ParseInt(shortcut[0], 10, 32)
+						shortcutParsed, _ := strconv.ParseInt(shortcut[1], 10, 32)
+
+						file.Shortcuts = append(file.Shortcuts, Shortcut{Key: int32(keyParsed),
+							Shortcut: int32(shortcutParsed)})
+
+					}
 
 					header = ""
 
@@ -137,10 +149,6 @@ func parse(input string) (*InputFile, error) {
 
 			}
 		}
-
-		fmt.Println("Current header:", header)
-		fmt.Println("File so far: ", file)
-
 
 	}
 

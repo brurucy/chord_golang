@@ -10,19 +10,18 @@ import (
 	//"log"
 )
 
-
-type ChordNode struct{
-	Id int32
+type ChordNode struct {
+	Id      int32
 	Address string
 }
 
 type ChordServer struct {
-	Node *ChordNode
-	Succ *ChordNode
-	SuccSucc *ChordNode
+	Node      *ChordNode
+	Succ      *ChordNode
+	SuccSucc  *ChordNode
 	Shortcuts []*ChordNode
-	Minsize int32
-	Maxsize int32
+	Minsize   int32
+	Maxsize   int32
 }
 
 func (s *ChordServer) AddShortcut(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
@@ -49,7 +48,7 @@ func (s *ChordServer) SetSucc(ctx context.Context, node *pb.Node) (*empty.Empty,
 		Id:      node.Id,
 		Address: node.Address,
 	}
-	return &empty.Empty{},nil
+	return &empty.Empty{}, nil
 }
 
 func (s *ChordServer) SetSuccSucc(ctx context.Context, node *pb.Node) (*empty.Empty, error) {
@@ -57,18 +56,17 @@ func (s *ChordServer) SetSuccSucc(ctx context.Context, node *pb.Node) (*empty.Em
 		Id:      node.Id,
 		Address: node.Address,
 	}
-	return &empty.Empty{},nil
+	return &empty.Empty{}, nil
 }
 
 func (s *ChordServer) Stabilize(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
 
 	// Fixing succ
-	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.Node.Id+1})
+	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.Node.Id + 1})
 	s.Succ = &ChordNode{Id: successor.Id, Address: successor.Address}
 	// Fixing succ succ
-	successorSuccessor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.Succ.Id+1})
+	successorSuccessor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: s.Succ.Id + 1})
 	s.SuccSucc = &ChordNode{Id: successorSuccessor.Id, Address: successorSuccessor.Address}
-
 
 	for idx, val := range s.Shortcuts {
 
@@ -124,8 +122,6 @@ func (s *ChordServer) StabilizeAll(ctx context.Context, e *empty.Empty) (*empty.
 		current = &ChordNode{Id: next.Id, Address: next.Address}
 	}
 
-
-
 	return &empty.Empty{}, nil
 
 }
@@ -139,6 +135,7 @@ func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, er
 	}
 
 	successor, _ := s.FindSuccessor(ctx, &pb.FindSuccessorRequest{Id: node.Id})
+
 	predecessor, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: node.Id})
 
 	conn, err := grpc.Dial(node.Address, grpc.WithInsecure())
@@ -169,7 +166,6 @@ func (s *ChordServer) Join(ctx context.Context, node *pb.Node) (*empty.Empty, er
 
 	return &empty.Empty{}, err
 }
-
 
 func (s *ChordServer) FindSuccessor(ctx context.Context, request *pb.FindSuccessorRequest) (*pb.Node, error) {
 
@@ -242,7 +238,7 @@ func (n *ChordNode) FindPredecessor(ctx context.Context, id int32) (*ChordNode, 
 
 // Closest Node To
 
-func (s *ChordServer) ClosestNodeTo(ctx context.Context, n *pb.ClosestNodeToRequest) (*pb.Node, error){
+func (s *ChordServer) ClosestNodeTo(ctx context.Context, n *pb.ClosestNodeToRequest) (*pb.Node, error) {
 
 	succSuccDistance := RingDistance(s.SuccSucc.Id, n.Id, s.Maxsize, s.Minsize)
 
@@ -272,7 +268,7 @@ func (s *ChordServer) ClosestNodeTo(ctx context.Context, n *pb.ClosestNodeToRequ
 		}
 
 		return &pb.Node{
-			Id: closestHop.Id,
+			Id:      closestHop.Id,
 			Address: closestHop.Address,
 		}, nil
 
@@ -294,7 +290,7 @@ func (n *ChordNode) Lookup(ctx context.Context, id, hops int32) (*ChordNode, int
 	return &ChordNode{r.Node.Id, r.Node.Address}, r.Hops, nil
 }
 
-func (s *ChordServer) HasValue(ctx context.Context, id int32) bool{
+func (s *ChordServer) HasValue(ctx context.Context, id int32) bool {
 
 	pred, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{
 		Id: s.Node.Id,
@@ -306,7 +302,14 @@ func (s *ChordServer) HasValue(ctx context.Context, id int32) bool{
 
 func (s *ChordServer) Lookup(ctx context.Context, request *pb.LookupRequest) (*pb.LookupResponse, error) {
 
-	if s.Node.Id == request.Id || s.HasValue(ctx, request.Id){
+	next, _ := s.ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: request.Id})
+
+	nextNode := ChordNode{
+		Id:      next.Id,
+		Address: next.Address,
+	}
+
+	if s.Node.Id == request.Id || s.HasValue(ctx, request.Id) {
 
 		return &pb.LookupResponse{Node: &pb.Node{Id: s.Node.Id, Address: s.Node.Address}, Hops: request.Hops}, nil
 
@@ -318,39 +321,37 @@ func (s *ChordServer) Lookup(ctx context.Context, request *pb.LookupRequest) (*p
 
 		return &pb.LookupResponse{Node: &pb.Node{Id: s.Succ.Id, Address: s.Succ.Address}, Hops: request.Hops + 1}, nil
 
-	} else if ShouldContainValueTwo(s.SuccSucc.Id, request.Id, s.Succ.Id) {
-
+	} else if ShouldContainValueTwo(s.SuccSucc.Id, request.Id, s.Succ.Id) && s.SuccSucc.Id != nextNode.Id {
 
 		return &pb.LookupResponse{Node: &pb.Node{Id: s.SuccSucc.Id, Address: s.SuccSucc.Address}, Hops: request.Hops + 2}, nil
 
 	} else {
-		next, _ := s.ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: request.Id})
 
+		/*
+			next, _ := s.ClosestNodeTo(ctx, &pb.ClosestNodeToRequest{Id: request.Id})
 
-		nextNode := ChordNode{
-			Id:      next.Id,
-			Address: next.Address,
-		}
+			nextNode := ChordNode{
+				Id:      next.Id,
+				Address: next.Address,
+			}
+		*/
 
 		var nodeResponse *ChordNode
 		hops := request.Hops
 		var err error
 
-		if nextNode.Id == s.SuccSucc.Id {
+		_, isSuccSuccInsideShortcuts := FindShortcut(s.Shortcuts, s.SuccSucc.Id)
 
-
+		if nextNode.Id == s.SuccSucc.Id && isSuccSuccInsideShortcuts != true {
 
 			hops = hops + 2
 
 		} else {
 
-
-
 			hops = hops + 1
 
 		}
 		nodeResponse, hops, err = nextNode.Lookup(ctx, request.Id, hops)
-
 
 		//nodeResponse, hops, err := s.SuccSucc.Lookup(ctx, request.Id, request.Hops+2)
 		if err != nil {
@@ -363,7 +364,6 @@ func (s *ChordServer) Lookup(ctx context.Context, request *pb.LookupRequest) (*p
 
 func (s *ChordServer) Leave(ctx context.Context, mpty *empty.Empty) (*empty.Empty, error) {
 
-
 	if s.Node.Id == s.Succ.Id && s.Node.Id == s.SuccSucc.Id {
 
 		newError := errors.New("Oh shizzle")
@@ -372,9 +372,9 @@ func (s *ChordServer) Leave(ctx context.Context, mpty *empty.Empty) (*empty.Empt
 
 	}
 
-	predecessor, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: s.Node.Id-1})
+	predecessor, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: s.Node.Id})
 	//log.Printf("Successor: %v", successor)
-	predPred, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: predecessor.Id-1})
+	predPred, _ := s.FindPredecessor(ctx, &pb.FindPredecessorRequest{Id: predecessor.Id})
 	// Updating Successors
 	// Setting pred succ
 	conn, err := grpc.Dial(predecessor.Address, grpc.WithInsecure())
