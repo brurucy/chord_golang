@@ -12,7 +12,7 @@ chord_golang Input-file.txt
 
 To compile the program yourself:
 
-1. Install Golang 1.15.5 from [here](https://golang.org/doc/install)
+1. Install Golang 1.15.5 from [here](https://golang.org/dl/#go1.15.5)
 2. Run in the project directory :
 ```bash
 go build 
