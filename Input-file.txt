@@ -9,4 +9,4 @@
 #shortcuts
 5:56, 5:71, 22:89
 
-#---here end the file--
+#---here ends the file--

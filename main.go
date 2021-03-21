@@ -79,11 +79,6 @@ func executor(in string) {
 					}
 
 					fmt.Println(val.Node.Id, shortcuts, "S-", val.Succ.Id, "NS-", val.SuccSucc.Id, "on port:", val.Node.Address)
-					//fmt.Println(val.Node.Id)
-					//fmt.Println(shortcuts)
-					//fmt.Println("S-", val.Succ.Id)
-					//fmt.Println("NS-", val.SuccSucc.Id)
-					//fmt.Println("on port:", val.Node.Address)
 
 				}
 
@@ -102,7 +97,6 @@ func executor(in string) {
 			} else {
 
 				keyStartNodes := strings.Split(whitespaceSplit[1], ":")
-				fmt.Println(keyStartNodes)
 
 				if len(keyStartNodes) > 2 {
 
@@ -258,9 +252,7 @@ func executor(in string) {
 						} else {
 
 							// Recursively Propagate a message for the next node to stabilize itself, ends when next = itself
-							fmt.Println("Stabilize attempt")
 							smallest.StabilizeAll(context.Background(), &empty.Empty{})
-							fmt.Println("Stabilize completed")
 						}
 
 					}
@@ -293,7 +285,7 @@ func executor(in string) {
 
 						pos, isNodeInTheAddressList := src_rpc.Find(chordServers, int32(keyId))
 
-						if isNodeInTheAddressList == false {
+						if !isNodeInTheAddressList {
 
 							fmt.Println("Can't Leave from a node that does not exist")
 
@@ -320,11 +312,8 @@ func executor(in string) {
 
 							stabilizerNodeIndex, _ := src_rpc.Find(chordServers, stabilizerNodeId)
 
-							fmt.Println("Attempting to leave at", keyId, "with stabilizer", stabilizerNodeId) //chordServers[stabilizerNodeId].Node.Id)
 							(*leaveServer).Leave(context.Background(), &empty.Empty{})
-							fmt.Println("Left")
 							(*leaveGrpcServer).Stop()
-							fmt.Println("Successfully stopped gRPC server")
 
 							if len(chordServers) < 2 {
 
@@ -334,7 +323,6 @@ func executor(in string) {
 							} else {
 
 								chordServers[stabilizerNodeIndex].StabilizeAll(context.Background(), &empty.Empty{})
-								fmt.Println("Succesfully stabilized, on nodeId ", stabilizerNodeId)
 
 							}
 
@@ -354,7 +342,6 @@ func executor(in string) {
 
 									chordServers[idx] = nil
 									grpcServers[idx] = nil
-									fmt.Println(val.Node.Id, "is not alive")
 
 								}
 
