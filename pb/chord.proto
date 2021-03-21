@@ -3,7 +3,7 @@ syntax = "proto3";
 package pb;
 import "google/protobuf/empty.proto";
 
-option go_package = "chord_backend/pb";
+option go_package = "chord_golang/pb";
 
 service Chord {
 
