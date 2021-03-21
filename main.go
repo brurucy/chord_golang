@@ -204,8 +204,6 @@ func executor(in string) {
 
 				keyId, err := strconv.ParseInt(whitespaceSplit[1], 10, 32)
 
-				fmt.Println(keyId)
-
 				if err == nil {
 
 					_, isNodeInTheAddressList := src_rpc.Find(chordServers, int32(keyId))
@@ -375,7 +373,6 @@ func executor(in string) {
 			} else {
 
 				keyStartNodes := strings.Split(whitespaceSplit[1], ":")
-				fmt.Println(keyStartNodes)
 
 				if len(keyStartNodes) != 2 {
 
