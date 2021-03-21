@@ -6,6 +6,8 @@ I have compiled several binaries, just for you. Choose the one `chord_golang*` t
 chord_golang Input-file.txt
 ```
 
+**Note:** Before running, make sure all ports between 10000 are 20000 are not occupied.
+
 ## How to compile
 
 To compile the program yourself:
