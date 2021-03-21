@@ -30,6 +30,10 @@ func executor(in string) {
 
 	whitespaceSplit := strings.Fields(in)
 
+	if len(whitespaceSplit) == 0 {
+		return
+	}
+
 	if whitespaceSplit[0] != "Read" &&
 		whitespaceSplit[0] != "Materialize" &&
 		whitespaceSplit[0] != "List" &&
