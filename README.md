@@ -1,12 +1,18 @@
-## Ruthless Ring
-
-Ruthless Ring is a very innovative implementation of a DHT, Distributed Hash Table.
-
 ## How to run
 
-I have compiled a binary, just for you.
+I have compiled several binaries, just for you. Choose the one `chord_golang*` that matches your OS and at least one should work. If neither of the binaries works, check [How to compile](#how-to-compile)
 
-But, this was compiled with NixOS, so, it's very likely that you don't use this OS, hence most likely you won't be able to run it. However, you can easily run it with:
+```bash
+chord_golang Input-file.txt
+```
 
-1. Installing Golang 1.15.5
-2. Go 
+## How to compile
+
+To compile the program yourself:
+
+1. Install Golang 1.15.5 from [here](https://golang.org/doc/install)
+2. Run in the project directory :
+```bash
+go build 
+```
+
